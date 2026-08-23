@@ -11,6 +11,12 @@
 
 [English](../README.md) · [한국어](README.ko.md) · [中文](README.zh.md) · [Español](README.es.md)
 
+[![check](https://github.com/w-partners/Wbrowser/actions/workflows/check.yml/badge.svg)](https://github.com/w-partners/Wbrowser/actions/workflows/check.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../LICENSE)
+![Node](https://img.shields.io/badge/node-%E2%89%A518-brightgreen)
+![Platforms](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20WSL%20%C2%B7%20Windows-verified-success)
+
+
 </div>
 
 ---

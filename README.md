@@ -2,12 +2,32 @@
 
 # 🤖 Wbrowser
 
-**Give your AI a seat at your own Chrome — not a browser of its own.**
+**Your AI can't see anything behind a login. This fixes that — on the OS you actually use.**
 
-This is not an AI browser. It's your everyday Chrome, with your logins already in it,
-that an assistant can drive *while you watch and use the same window*.
+Your assistant can search the web, but it can't open your inbox, your dashboard, or your
+company's internal tool. Everything useful is behind a sign-in it doesn't have.
 
-No API keys. No integrations. No re-logging-in. Close the window and it's over.
+Wbrowser gives it a seat at **your own Chrome** — the one you're already signed into.
+Same window, same tabs. You watch each click land and can take the mouse back mid-task.
+
+**Your password never leaves you.** You log in by hand; Chrome keeps it; Wbrowser only
+drives the window that's already open.
+
+Runs on **Windows, macOS, Linux and WSL** — each one measured on real hardware by a
+different person, not by us:
+
+| Platform | Chrome | Verified by |
+|---|---|---|
+| Windows 10 | 151 | independent reviewer, incl. end-to-end |
+| macOS 15 | 151 | independent reviewer |
+| Linux (headless) | 148 | independent reviewer, incl. security review |
+| WSL2 | 151 | maintainer |
+
+<sub>Measured 2026-08-24. Not every check ran everywhere — details in
+[Platform notes](#platform-notes).</sub>
+
+About **2,600 lines** of JavaScript, Python and shell. MIT. Small enough to read in an
+afternoon and change to suit you.
 
 [English](README.md) · [한국어](docs/README.ko.md) · [中文](docs/README.zh.md) · [Español](docs/README.es.md)
 
@@ -97,6 +117,27 @@ doesn't use Google.* After that your agent reaches all of it.
 🔴 The flip side is the same fact: **whoever can drive this browser can act on every
 one of those sites.** See [Security](#security).
 
+### What it won't do
+
+- **Ask for or store your password.** You sign in; Chrome keeps it; Wbrowser drives
+  the window that's already open. `type` never logs what was typed.
+- **Print cookie values.** Not in output, not in logs — cookies *are* the login.
+- **Guess which account you meant.** Name an account that isn't open and it fails.
+  Sending mail from the wrong account is worse than an error message.
+- **Click submit / pay / delete on a schedule.** Unattended jobs refuse those steps
+  unless that specific job opts in. Nobody is watching when a cron job goes wrong.
+
+### One limit we measured and are telling you about
+
+Chrome's debugging port has **no authentication**. Any process running as *you* on that
+machine can attach and drive your sessions — we verified this by connecting from an
+unrelated process and listing the open tabs. `127.0.0.1` is not a fence; it means
+"anything running as you gets in".
+
+That is Chrome's design, not something we added, and every tool in this category
+inherits it. We'd rather write it down than let you find out later —
+see [Security](#security) for the full threat model.
+
 ## Quick start
 
 ```bash
@@ -181,10 +222,17 @@ Copy from there. (We once guessed `input[name=q]` for a search box — it was a
 
 ---
 
-## Use it from an AI assistant (MCP)
+## Just tell your assistant what to do
 
-Wbrowser speaks the [Model Context Protocol](https://modelcontextprotocol.io),
-so any MCP-capable assistant can drive your browser.
+Once connected, you stop typing commands and start describing outcomes:
+
+> *"Open my dashboard and summarise today's numbers."*
+> *"What's in my cart on that shopping site?"*
+> *"Check whether that booking actually went through."*
+
+The connection uses the [Model Context Protocol](https://modelcontextprotocol.io) —
+if your assistant supports MCP (Claude, Cursor, and others do), this is a few lines
+of config and you're done.
 
 **Local (stdio):**
 ```json
