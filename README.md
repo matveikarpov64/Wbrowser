@@ -181,6 +181,26 @@ Then just talk to your assistant:
 
 ---
 
+### What an agent should know before driving
+
+These came from actual mistakes made while building this. If you write your own
+skill/prompt around Wbrowser, put them in it:
+
+1. **Don't guess selectors.** `browser_read` returns the real ones on the page.
+   We guessed `input[name=q]` for a search box; it was a `textarea`, and `read`
+   had said so all along.
+2. **Read the form back before submitting.** In one batch form, rows 2-10 had empty
+   customer fields because the "keep" checkboxes didn't cover them. Reading every row
+   before clicking caught it; clicking first would have created 9 broken records.
+3. **Count as you repeat.** Sending 8 Enter presses in a row produced 40 rows — the
+   page handled them faster than expected. Press once, count, stop at the target.
+4. **`eval` beats `type` for framework forms; `type` beats `eval` when that fails.**
+   React ignores direct `value` assignment — use the native setter plus input/change
+   events. If it still doesn't take, `browser_type` sends real keystrokes.
+5. **Check what you're attached to.** `browser_status` tells you whether the window
+   actually holds logins. An empty profile answers every command successfully while
+   doing nothing useful.
+
 ## Scheduled jobs (cron)
 
 Create `jobs/morning-check.json`:

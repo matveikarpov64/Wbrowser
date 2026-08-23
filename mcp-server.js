@@ -138,7 +138,10 @@ const TOOLS = [
   },
   {
     name: 'browser_press',
-    description: 'Presses a key (Enter, Tab, Escape, ArrowDown …).',
+    description: 'Presses a key (Enter, Tab, Escape, ArrowDown …). '
+      + '🔵 If you are repeating a key to add rows or items, count after each press and stop '
+      + 'when you reach the target. Sending 8 presses in a row once produced 40 rows — the '
+      + 'page processed them faster than expected.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -151,7 +154,10 @@ const TOOLS = [
   {
     name: 'browser_eval',
     description: 'Runs JavaScript in the page context and returns its value. '
-      + 'Use it for complex form manipulation or DOM queries.',
+      + 'Use it for complex form manipulation or DOM queries. '
+      + '🔵 Frameworks like React ignore direct value assignment. Use the native setter '
+      + '(Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set) followed by '
+      + 'input and change events — or fall back to browser_type, which sends real keystrokes.',
     inputSchema: {
       type: 'object',
       properties: {
