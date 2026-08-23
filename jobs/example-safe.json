@@ -1,0 +1,9 @@
+{
+  "_about": "Example job: open a page and read its title, weekdays at 09:00.",
+  "schedule": "0 9 * * 1-5",
+  "tab": "daily",
+  "steps": [
+    { "goto": "https://example.com", "wait": 1500 },
+    { "eval": "document.title" }
+  ]
+}

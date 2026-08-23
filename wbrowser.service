@@ -1,0 +1,31 @@
+[Unit]
+# Wbrowser — control engine that drives an already-logged-in Chrome over CDP.
+#
+# Install:
+#   ./install.sh          fills in paths and installs to ~/.config/systemd/user/
+#
+# This service does not launch the browser (a desktop process, outside systemd's scope).
+# The engine starts without a browser and attaches to CDP when a request arrives.
+Description=Wbrowser control engine
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=__WBROWSER_DIR__
+ExecStart=__NODE_BIN__ __WBROWSER_DIR__/engine.js
+Restart=on-failure
+RestartSec=5
+
+# 🔴 The engine binds to 127.0.0.1 only (engine.js). It drives a browser holding
+#    all your logins — exposing the port hands every session to whoever reaches it.
+Environment=WBROWSER_PORT=7981
+Environment=WBROWSER_CDP=http://127.0.0.1:9222
+
+# Where to write the work log (optional). Leave unset to disable logging.
+# Environment=WBROWSER_NOTES=__NOTES_DIR__
+
+StandardOutput=append:__WBROWSER_DIR__/.engine.log
+StandardError=append:__WBROWSER_DIR__/.engine.log
+
+[Install]
+WantedBy=default.target

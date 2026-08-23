@@ -1,0 +1,15 @@
+{
+  "_about": "Maps sites to the browser profile they should open in. Never put passwords here.",
+  "_usage": "./wb go https://mail.example.com  → picks the account below automatically",
+  "_note": "'account' can be a profile folder name (Default, \"Profile 3\") or an email that profile is signed in with.",
+
+  "defaultAccount": "",
+
+  "sites": {
+  },
+
+  "_example": {
+    "mail.example.com": { "account": "work@example.com" },
+    "intranet.example.org": { "account": "Profile 2", "note": "internal system" }
+  }
+}

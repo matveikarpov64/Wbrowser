@@ -1,0 +1,284 @@
+#!/usr/bin/env bash
+# wb — control stick for the Windows browser agent.
+#
+#   ./wb up              start Chrome + engine (leaves them alone if already up)
+#   ./wb status          are they alive (the judge is CDP/engine responses, not the process list)
+#   ./wb go <url>        open a page
+#   ./wb read            summarize the current screen (title, links, buttons, inputs)
+#   ./wb click <selector>
+#   ./wb type <selector> <text>
+#   ./wb press <key>     Enter, Tab, Escape ...
+#   ./wb shot [path]     screenshot (default /tmp/win-shot.png)
+#   ./wb tabs            tab list
+#   ./wb down            take down the engine only (Chrome belongs to the user, so we don't touch it)
+#
+# 🔴 This script never kills Chrome. It may be a window the user was using.
+
+set -uo pipefail
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENGINE="http://127.0.0.1:${WBROWSER_PORT:-7981}"
+CDP="http://127.0.0.1:${WBROWSER_CDP_PORT:-9222}"
+# 🔴 Logs record visited URLs — keep them out of the repo folder so zipping or
+#    sharing the directory can't leak them. (.gitignore only guards git.)
+_state_dir() {
+  if [ -n "${WBROWSER_STATE_DIR:-}" ]; then echo "$WBROWSER_STATE_DIR"; return; fi
+  case "$(uname -s)" in
+    Darwin) echo "$HOME/Library/Application Support/wbrowser" ;;
+    MINGW*|MSYS*|CYGWIN*) echo "${LOCALAPPDATA:-$HOME}/wbrowser" ;;
+    *) echo "${XDG_STATE_HOME:-$HOME/.local/state}/wbrowser" ;;
+  esac
+}
+mkdir -p "$(_state_dir)" 2>/dev/null
+LOG="$(_state_dir)/engine.log"
+
+_post() {   # _post '<json>'
+  curl -s --max-time "${WIN_TIMEOUT:-45}" -X POST "$ENGINE/act" \
+    -H 'Content-Type: application/json' -d "$1"
+}
+_pretty() { python3 "$DIR/fmt.py"; }
+
+# Don't assemble JSON in the shell — it silently breaks once quotes/backslashes get mixed in.
+# Pass the arguments through as-is and let Python do the escaping.
+# 🔵 Don't hardcode the agent name — it differs per machine.
+#    AOE_INSTANCE_ID from the harness is the source of truth; without it, derive from the working directory.
+_agent_name() {
+  if [ -n "${WIN_AGENT:-}" ]; then echo "$WIN_AGENT"; return; fi
+  # 🔴 AOE_INSTANCE_ID is a hash, not a human-readable name (measured: 1368cc4da26a4bdc).
+  #    Putting it in a tab title leaves the user unable to tell whose tab it is — so we don't use it.
+  #    Derive it from the working directory instead: .../<agents-dir>/<name>
+  case "$PWD" in
+    */AGENT/*|*/agents/*) echo "$PWD" | sed -E 's#.*/(AGENT|agents)/([^/]+).*#\2#'; return ;;
+  esac
+  # If the caller invoked us from somewhere else, look at the parent shell's working directory
+  PARENT_CWD="$(readlink -f "/proc/$PPID/cwd" 2>/dev/null)"
+  case "$PARENT_CWD" in
+    */AGENT/*|*/agents/*) echo "$PARENT_CWD" | sed -E 's#.*/(AGENT|agents)/([^/]+).*#\2#'; return ;;
+  esac
+  echo ""   # 🔴 If we can't determine it, empty — we don't attach a bogus name
+}
+AGENT_NAME="$(_agent_name)"
+
+_json() {
+  WIN_ACCOUNT_RESOLVED="$ACCOUNT" WIN_AGENT="$AGENT_NAME" \
+    python3 "$DIR/mkcmd.py" "$@"
+}
+
+_cdp_up()    { curl -s --max-time 2 "$CDP/json/version"  2>/dev/null | grep -q Browser; }
+_engine_up() { curl -s --max-time 2 "$ENGINE/health"     2>/dev/null | grep -q '"ok"'; }
+
+# Accept --account <hint> at any position. Without an account, the default window.
+ACCOUNT="${WIN_ACCOUNT:-}"
+ARGS=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --account|-a) ACCOUNT="${2:-}"; shift 2 || shift ;;
+    --account=*)  ACCOUNT="${1#--account=}"; shift ;;
+    *) ARGS+=("$1"); shift ;;
+  esac
+done
+set -- "${ARGS[@]+"${ARGS[@]}"}"
+
+cmd="${1:-status}"; shift || true
+
+case "$cmd" in
+  up)
+    if _cdp_up; then echo "· Chrome already up"; else
+      # 🔴 The default is "attach to the Chrome the user is logged into", not launching a new one.
+      #    Chrome locks the default profile so we can't launch it, and if we do launch one
+      #    it becomes an empty window with no logins, which is useless.
+      #    If you need an empty dedicated window, state it explicitly with WIN_OWN_PROFILE=1.
+      # If there is a copied logged-in profile, launch straight with that.
+      if true; then
+        # If you passed an account via --account, start with that profile
+        if [ -n "$ACCOUNT" ]; then
+          P="$(python3 "$DIR/findprofile.py" "$ACCOUNT" 2>/dev/null)"
+          [ -n "$P" ] && export CHROME_PROFILE_DIR="$P" \
+            && echo "· Starting profile: $P ($ACCOUNT)"
+        fi
+        node "$DIR/launch.js" || exit 1
+      else
+        echo "❌ No logged-in Chrome is running."
+        echo "     (If Chrome is already running, close them all first, then run it — check the tray icon too)"
+        echo
+        echo "   🔵 If you want an empty dedicated window with no logins: WIN_OWN_PROFILE=1 ./wb up"
+        exit 1
+      fi
+    fi
+    if _engine_up; then echo "· Engine already up"; else
+      nohup node "$DIR/engine.js" > "$LOG" 2>&1 &
+      for _ in $(seq 1 25); do _engine_up && break; sleep 0.4; done
+      if _engine_up; then echo "· Engine started $ENGINE"
+      else echo "❌ Engine won't come up. Log: $LOG"; tail -5 "$LOG"; exit 1; fi
+    fi
+    echo "✅ Ready"
+    ;;
+  status)
+    # 🔵 Don't judge with tasklist/netstat — under mirrored WSL all three fail to see
+    #    Chrome while CDP responds fine (measured 2026-08-23).
+    _cdp_up    && echo "✅ Chrome (CDP $CDP)" || echo "❌ Chrome — ./wb up"
+    _engine_up && echo "✅ Engine ($ENGINE)"  || echo "❌ Engine — ./wb up"
+    # 🔴 Don't stop at "attached" — whether it's a logged-in window or an empty one is the real issue.
+    _cdp_up && WBROWSER_ENGINE="$ENGINE" python3 "$DIR/whoami.py" "$CDP"
+    ;;
+  whoami)
+    _cdp_up || { echo "❌ Chrome is not running"; exit 1; }
+    WBROWSER_ENGINE="$ENGINE" python3 "$DIR/whoami.py" "$CDP" --verbose
+    ;;
+  go|read|click|type|press|console|errors|network|eval)
+          _post "$(_json "$cmd" "$@")" | _pretty ;;
+  tabs)
+    # Show tabs grouped by agent. The [name] marker in the title is the discriminator.
+    python3 - "$CDP" <<'PY'
+import json, re, sys, urllib.request
+cdp = sys.argv[1]
+try:
+    tabs = json.load(urllib.request.urlopen(cdp + "/json", timeout=5))
+except Exception:
+    print("❌ Browser is not running — ./wb up"); sys.exit(1)
+groups = {}
+for t in tabs:
+    if t.get("type") != "page":
+        continue
+    title = t.get("title") or "(untitled)"
+    m = re.match(r"^\[([^\]]+)\]\s*(.*)$", title)
+    who = m.group(1) if m else "(no agent marker)"
+    groups.setdefault(who, []).append((m.group(2) if m else title, t.get("url") or ""))
+if not groups:
+    print("No open tabs."); sys.exit(0)
+for who in sorted(groups, key=lambda k: (k.startswith("("), k)):
+    print(f"■ {who}  ({len(groups[who])} tabs)")
+    for title, url in groups[who]:
+        print(f"    {title[:45]:<47} {url[:45]}")
+    print()
+PY
+    ;;
+  logins)
+    # What are we logged into (by cookie domain). We never look at the values.
+    _cdp_up || { echo "❌ Browser is not running — ./wb up"; exit 1; }
+    curl -s --max-time 30 "$ENGINE/logins" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+if 'error' in d: print('❌', d['error']); sys.exit(1)
+for c in d.get('contexts', []):
+    doms = c.get('domains') or []
+    print('Profile: %s' % (c.get('profile') or '(unknown)'))
+    print('  %d cookies / %d domains' % (c.get('totalCookies',0), len(doms)))
+    if not doms:
+        print('  🔵 Not logged into any site yet')
+    for x in doms[:25]:
+        print('    %4d  %s' % (x['count'], x['domain']))
+    if len(doms) > 25:
+        print('    ... and %d more' % (len(doms)-25))
+"
+    ;;
+  windows)
+    # Show the profile windows the user opened, grouped by account.
+    curl -s --max-time 30 "$ENGINE/windows" | python3 "$DIR/fmtwin.py"
+    ;;
+  show)
+    # 🔵 The answer to "there are too many Chrome windows, I can't tell which one is the agent's".
+    #    Bring that window to the front over CDP — effectively pointing at it on screen.
+    if ! _cdp_up; then echo "❌ The agent browser is not running — ./wb up"; exit 1; fi
+    _post '{"read":true}' >/dev/null 2>&1
+    python3 - "$CDP" <<'PY'
+import json, sys, urllib.request
+cdp = sys.argv[1]
+try:
+    tabs = json.load(urllib.request.urlopen(cdp + "/json", timeout=5))
+except Exception as e:
+    print("❌ CDP query failed:", e); sys.exit(1)
+pages = [t for t in tabs if t.get("type") == "page"]
+if not pages:
+    print("❌ No tabs"); sys.exit(1)
+# Bring to front with Page.bringToFront. Use the activate endpoint, which works without WebSocket.
+try:
+    urllib.request.urlopen(cdp + "/json/activate/" + pages[0]["id"], timeout=5).read()
+    print("✅ Brought the agent browser window to the front.")
+except Exception as e:
+    print("🔵 Window activation failed (please find it manually):", e)
+print("   Look for '🤖 Wbrowser' in the title bar / taskbar.")
+print("   Currently open tabs:")
+for t in pages:
+    print("    -", (t.get("title") or "(untitled)")[:60])
+PY
+    ;;
+  close)
+    # Close only the tabs my agent opened. 🔴 Closing the last tab shuts the browser
+    #    down with it (measured 2026-08-23) — always leave one behind.
+    python3 - "$CDP" "$AGENT_NAME" <<'PY'
+import json, re, sys, urllib.request
+cdp, me = sys.argv[1], (sys.argv[2] if len(sys.argv) > 2 else "")
+try:
+    tabs = [t for t in json.load(urllib.request.urlopen(cdp + "/json", timeout=5))
+            if t.get("type") == "page"]
+except Exception:
+    print("❌ Browser is not running"); sys.exit(1)
+
+mine = [t for t in tabs if me and (t.get("title") or "").startswith(f"[{me}]")]
+if not mine:
+    print(f"· '{me}' has no open tabs"); sys.exit(0)
+# If every tab is mine, leave one behind — otherwise the browser dies.
+keep = 1 if len(mine) == len(tabs) else 0
+closed = 0
+for t in mine[keep:]:
+    try:
+        urllib.request.urlopen(cdp + "/json/close/" + t["id"], timeout=3).read(); closed += 1
+    except Exception:
+        pass
+print(f"· Closed {closed} tabs" + ("  (kept 1 to keep the browser alive)" if keep else ""))
+PY
+    ;;
+  home)
+    # Go back to the guide screen (when you want to see the login instructions again).
+    # 🔵 The path must match what launch.js computed — so we ask it there.
+    URL="$(node -e '
+      const m = require("path");
+      process.argv[1];
+      const p = process.env.CHROME_PROFILE_WIN;
+      if (p) { console.log("file:///" + p.replace(/\\\\/g,"/") + "/home.html"); }
+    ' 2>/dev/null)"
+    if [ -z "$URL" ]; then
+      # Instead of asking the running browser where its profile is, use the standard location
+      URL="$(ls -d /mnt/c/Users/*/.wbrowser 2>/dev/null | head -1 \
+             | sed 's#^/mnt/\(.\)/#file:///\U\1\E:/#')/home.html"
+    fi
+    [ -n "$URL" ] && _post "$(_json go "$URL")" >/dev/null && echo "· Moved to the guide screen: $URL" \
+      || echo "❌ Could not find the guide screen path"
+    ;;
+  shot)
+    OUT="${1:-/tmp/win-shot.png}"
+    _post '{"shot":true}' | python3 -c "
+import json,sys,base64
+d=json.load(sys.stdin)
+if 'error' in d: print('❌', d['error']); sys.exit(1)
+b=d.get('screenshot_b64')
+if not b: print('❌ Screenshot is empty'); sys.exit(1)
+open('$OUT','wb').write(base64.b64decode(b))
+print('Saved:', '$OUT')
+"
+    ;;
+  logs)
+    # 🔵 Logs live outside the repo (they record visited URLs), so give the user
+    #    an easy way to reach them — convenience shouldn't cost repo hygiene.
+    if [ ! -f "$LOG" ]; then
+      echo "No log yet: $LOG"
+    else
+      echo "· $LOG"
+      tail -n "${1:-40}" "$LOG"
+    fi
+    ;;
+  down)
+    # 🔴 pkill -f also catches ourselves and the parent shell (if the same string is on their command line).
+    #    It actually killed the shell that invoked this script (2026-08-23). Narrow the target.
+    KILLED=0
+    for pid in $(pgrep -f 'node .*engine\.js' 2>/dev/null); do
+      [ "$pid" = "$$" ] && continue
+      [ "$pid" = "$PPID" ] && continue
+      # node processes only (not shells)
+      case "$(readlink -f /proc/$pid/exe 2>/dev/null)" in *node*) kill "$pid" 2>/dev/null && KILLED=1;; esac
+    done
+    [ "$KILLED" = 1 ] && echo "· Engine taken down" || echo "· Engine was not running"
+    echo "🔵 Leaving Chrome alone (it may be a user window). To turn it off, close the window."
+    ;;
+  *) awk 'NR>1 && /^#/ {sub(/^# ?/,""); print; next} NR>1 {exit}' "${BASH_SOURCE[0]}" ;;
+esac

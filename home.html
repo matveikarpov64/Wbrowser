@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- 🔴 The tab title is the identifier. It's the first clue for picking this
+     window out among several Chrome windows, so the emoji goes up front. -->
+<title>🤖 Wbrowser</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background: #0f1117; color: #e6e8ee;
+    font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .card {
+    width: min(680px, 92vw); padding: 40px 44px;
+    background: #171a23; border: 1px solid #2a2f3d; border-radius: 16px;
+  }
+  h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: -.4px; }
+  .sub { margin: 0 0 28px; color: #8d93a5; font-size: 14px; }
+  .badge {
+    display: inline-block; margin-bottom: 20px; padding: 6px 12px;
+    background: #1e3a2f; color: #6ee7a8; border: 1px solid #2f6b52;
+    border-radius: 999px; font-size: 12px; font-weight: 600;
+  }
+  .row { display: flex; gap: 12px; padding: 14px 0; border-top: 1px solid #232838; }
+  .row:first-of-type { border-top: none; }
+  .n {
+    flex: none; width: 24px; height: 24px; border-radius: 50%;
+    background: #2b3348; color: #9fb0ff;
+    display: grid; place-items: center; font-size: 12px; font-weight: 700;
+  }
+  .t { font-size: 14px; line-height: 1.6; }
+  .t b { color: #fff; }
+  .warn {
+    margin-top: 26px; padding: 14px 16px; font-size: 13px; line-height: 1.6;
+    background: #2a1e1e; border: 1px solid #5c3434; border-radius: 10px; color: #ffb4b4;
+  }
+  code {
+    background: #0b0d13; padding: 2px 6px; border-radius: 4px;
+    font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: #b9c4ff;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">● This window is driven by the agent</div>
+    <h1>🤖 Wbrowser</h1>
+    <p class="sub">A dedicated profile, kept separate from your everyday Chrome. Bookmarks, extensions and logins never mix.</p>
+
+    <div class="row">
+      <div class="n">1</div>
+      <div class="t"><b>Sign in to your accounts here.</b> Gmail or anywhere else — once you log in,
+        the session stays in this profile and the agent picks up from that state next time.
+        <span style="color:#8d93a5">If Chrome asks "Save password?", go ahead —
+        only Chrome keeps it, and the agent can't see the value.</span></div>
+    </div>
+    <div class="row">
+      <div class="n">i</div>
+      <div class="t" style="color:#8d93a5"><b style="color:#ffd28a">Why this window and not your usual Chrome</b> —
+        since Chrome 136 the <b style="color:#fff">default profile blocks external control</b> (a defence against cookie-theft attacks).
+        That makes a dedicated profile the only way in. Just build your logins up here.</div>
+    </div>
+    <div class="row">
+      <div class="n">2</div>
+      <div class="t"><b>Leave this window open.</b> If you close it, the agent has nothing left to drive.
+        Minimising is fine.</div>
+    </div>
+    <div class="row">
+      <div class="n">3</div>
+      <div class="t"><b>For the rest, just ask in plain words.</b> No terminal commands to memorise —
+        say something like <i>"clear out the unread mail in here"</i> and the agent will drive this window for you.</div>
+    </div>
+
+    <div class="warn">
+      🔴 <b>The agent will not type passwords for you.</b> That's forbidden by policy.
+      Sign in yourself in this window; the agent only reuses the session afterwards.
+    </div>
+  </div>
+</body>
+</html>

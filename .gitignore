@@ -1,0 +1,22 @@
+# 🔴 Real login data — never commit this.
+# Runtime state now defaults to the OS state directory, not the repo,
+# but these stay here as a second line of defence.
+.wbrowser/
+*.session.json
+session.json
+wbrowser-session.json
+runtime.json
+
+# Logs (they contain visited URLs)
+*.log
+
+# Local job definitions
+jobs/*.local.json
+
+node_modules/
+package-lock.json
+.DS_Store
+
+# Python bytecode — leaked into the first commit before this line existed
+__pycache__/
+*.py[cod]

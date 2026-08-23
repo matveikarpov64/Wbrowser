@@ -1,0 +1,52 @@
+{
+  "name": "wbrowser",
+  "version": "0.1.0",
+  "description": "Drive your real, already-logged-in Chrome from the terminal or any MCP client",
+  "type": "commonjs",
+  "bin": {
+    "wbrowser": "./bin/wbrowser.js"
+  },
+  "scripts": {
+    "engine": "node engine.js",
+    "mcp": "node mcp-server.js"
+  },
+  "keywords": [
+    "mcp",
+    "browser",
+    "automation",
+    "chrome",
+    "cdp",
+    "playwright",
+    "ai-agent"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0",
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/w-partners/Wbrowser.git"
+  },
+  "bugs": {
+    "url": "https://github.com/w-partners/Wbrowser/issues"
+  },
+  "homepage": "https://github.com/w-partners/Wbrowser#readme",
+  "files": [
+    "bin/",
+    "docs/",
+    "jobs/",
+    "*.js",
+    "*.py",
+    "wb",
+    "*.sh",
+    "wbrowser.service",
+    "home.html",
+    "accounts.json",
+    "README.md",
+    "LICENSE"
+  ]
+}

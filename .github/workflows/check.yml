@@ -1,0 +1,62 @@
+name: check
+
+# Syntax and startup checks only. Anything that needs a real logged-in Chrome
+# can't run on a CI runner — those paths are verified by hand on macOS, Linux
+# and WSL before release.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  syntax:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: JavaScript syntax
+        run: |
+          node --check engine.js
+          node --check launch.js
+          node --check cron.js
+          node --check mcp-server.js
+          node --check journal.js
+          node --check bin/wbrowser.js
+
+      - name: Python syntax
+        run: python -m py_compile whoami.py fmt.py fmtwin.py mkcmd.py findprofile.py session_io.py
+
+      - name: JSON is parseable
+        run: node -e "['package.json','accounts.json','jobs/example-safe.json'].forEach(f=>JSON.parse(require('fs').readFileSync(f)))"
+
+      - name: Shell syntax
+        if: runner.os != 'Windows'
+        run: bash -n wb && bash -n install.sh && bash -n sync-session.sh && bash -n autostart.sh
+
+      - name: Executable bits survived the checkout
+        if: runner.os != 'Windows'
+        run: |
+          for f in wb install.sh autostart.sh sync-session.sh bin/wbrowser.js; do
+            test -x "$f" || { echo "::error::$f is not executable — git mode should be 100755"; exit 1; }
+          done
+
+      - name: CLI starts without a browser
+        run: |
+          node cron.js list
+          node bin/wbrowser.js --help
+
+      - name: Remote MCP refuses to start without a token
+        shell: bash
+        run: |
+          npm install --no-audit --no-fund --silent
+          if node mcp-server.js --http --port 7999 2>/dev/null; then
+            echo "::error::MCP HTTP started without a token"; exit 1
+          fi
+          echo "correctly refused"
