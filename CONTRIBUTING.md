@@ -25,7 +25,18 @@ These are not style preferences — each one came from a bug we actually hit:
 
 ## Testing
 
-There is no test suite yet. What we do have:
+**There is no automated test suite.** That is the largest gap in this project right now.
+
+CI checks syntax, executable bits, and that the remote MCP server refuses to start
+without a token — but nothing exercises the browser. Everything else was measured by
+hand on four platforms before release, which does not scale and won't catch your
+regression or ours.
+
+🔵 If you want to contribute something high-value, this is it. A harness that launches
+headless Chrome and drives `/act` end-to-end would replace most of what we currently
+do manually.
+
+What exists today:
 
 ```bash
 # syntax

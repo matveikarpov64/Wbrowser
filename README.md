@@ -13,14 +13,14 @@ Same window, same tabs. You watch each click land and can take the mouse back mi
 **Your password never leaves you.** You log in by hand; Chrome keeps it; Wbrowser only
 drives the window that's already open.
 
-Runs on **Windows, macOS, Linux and WSL** — each one measured on real hardware by a
-different person, not by us:
+Runs on **Windows, macOS, Linux and WSL** — each measured on real hardware, on a
+different machine, by someone other than the person who wrote that part:
 
 | Platform | Chrome | Verified by |
 |---|---|---|
-| Windows 10 | 151 | independent reviewer, incl. end-to-end |
-| macOS 15 | 151 | independent reviewer |
-| Linux (headless) | 148 | independent reviewer, incl. security review |
+| Windows 10 | 151 | different machine & operator — incl. end-to-end |
+| macOS 15 | 151 | different machine & operator |
+| Linux (headless) | 148 | different machine & operator — incl. security review |
 | WSL2 | 151 | maintainer |
 
 <sub>Measured 2026-08-24. Not every check ran everywhere — details in
@@ -380,10 +380,10 @@ Override with `WBROWSER_CHROME=/path/to/chrome` if detection fails.
 >
 > | Platform | Chrome | Verified by | What was measured there |
 > |---|---|---|---|
-> | macOS 15 | 151 | independent reviewer | launch · engine · CLI · state paths |
-> | Linux (native, headless) | 148 | independent reviewer | the above **+ security review** |
+> | macOS 15 | 151 | separate operator | launch · engine · CLI · state paths |
+> | Linux (native, headless) | 148 | separate operator | the above **+ security review** |
 > | WSL2 + Windows Chrome | 151 | maintainer | the above |
-> | Windows 10 (native) | 151 | independent reviewer | the above **+ end-to-end** |
+> | Windows 10 (native) | 151 | separate operator | the above **+ end-to-end** |
 >
 > Not every check ran on every platform. The **security review** (no-token MCP refusal
 > confirmed with `ss`, engine unreachable off-loopback) was done on Linux. The
@@ -459,6 +459,10 @@ desktop process, and it should be your choice when it opens.
 ---
 
 ## Known limitations
+
+- **No automated test suite.** CI checks syntax and a few invariants; everything that
+  touches a real browser was measured by hand across four platforms. That does not
+  scale, and it is the most useful thing a contributor could add.
 
 - **No natural-language loop built in.** The agent picks selectors; `read` gives it
   the real ones, so it doesn't have to guess.

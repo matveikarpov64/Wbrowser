@@ -311,10 +311,10 @@ Si la detección falla, usa `WBROWSER_CHROME=/ruta/a/chrome`.
 >
 > | Plataforma | Chrome | Verificado por | Qué se midió allí |
 > |---|---|---|---|
-> | macOS 15 | 151 | revisor independiente | arranque · motor · CLI · rutas de estado |
-> | Linux (nativo, sin pantalla) | 148 | revisor independiente | lo anterior + **revisión de seguridad** |
+> | macOS 15 | 151 | otro operador | arranque · motor · CLI · rutas de estado |
+> | Linux (nativo, sin pantalla) | 148 | otro operador | lo anterior + **revisión de seguridad** |
 > | WSL2 + Chrome de Windows | 151 | mantenedor | lo anterior |
-> | Windows 10 (nativo) | 151 | revisor independiente | lo anterior + **prueba de extremo a extremo** |
+> | Windows 10 (nativo) | 151 | otro operador | lo anterior + **prueba de extremo a extremo** |
 >
 > 🔵 **No todas las comprobaciones se ejecutaron en todas las plataformas.** La revisión de
 > seguridad (rechazo sin token confirmado con `ss`, motor inalcanzable fuera de loopback) se

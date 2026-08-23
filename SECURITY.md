@@ -27,6 +27,23 @@ Only run Wbrowser where you trust everything that runs under your user account.
 - Scheduled jobs refuse steps that look irreversible (submit / payment / delete)
   unless that job explicitly opts in with `"allowIrreversible": true`.
 
+## What this project is and isn't responsible for
+
+Wbrowser is a thin layer over Chrome's DevTools Protocol. The sharp edges below are
+**Chrome's design**, inherited by every tool in this category — we did not add them,
+and we cannot remove them:
+
+- The debugging port has no authentication.
+- A profile with `--remote-debugging-port` is drivable by any local process as you.
+- Chrome 136+ refuses this on the default profile precisely because of that.
+
+What we *are* responsible for: not making it worse, and telling you where the edges
+are. That's why the table above exists rather than a "secure by design" claim.
+
+Like all MIT software, this comes with no warranty. If you run it on a machine where
+you don't trust every process running as your user, the exposure is real regardless of
+what this project does.
+
 ## Reporting a vulnerability
 
 Please open a [private security advisory](https://github.com/w-partners/Wbrowser/security/advisories/new)
