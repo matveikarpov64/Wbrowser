@@ -12,8 +12,8 @@ Your browser, your sessions, your machine.
 [![check](https://github.com/w-partners/Wbrowser/actions/workflows/check.yml/badge.svg)](https://github.com/w-partners/Wbrowser/actions/workflows/check.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Node](https://img.shields.io/badge/node-%E2%89%A518-brightgreen)
-![Platforms](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20WSL-verified-success)
-![Windows](https://img.shields.io/badge/Windows--native-not%20yet%20measured-lightgrey)
+![Platforms](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20WSL%20%C2%B7%20Windows-verified-success)
+![Windows](https://img.shields.io/badge/Windows--native-verified-success)
 
 </div>
 
@@ -35,8 +35,8 @@ So we built the part that mattered, in a way that runs everywhere.
 
 Wbrowser targets **Windows, macOS, Linux, and WSL** — because "which OS are you on?"
 should never be the reason you can't automate your own browser.
-Verified on macOS, native Linux and WSL; Windows-native is implemented but not yet measured
-(see [Platform notes](#platform-notes)).
+Measured on macOS, native Linux, WSL2 and Windows-native — though not every check ran
+on every platform (see [Platform notes](#platform-notes)).
 
 ---
 
@@ -274,16 +274,21 @@ Override with `WBROWSER_CHROME=/path/to/chrome` if detection fails.
 
 > **Tested on real hardware** (2026-08-24):
 >
-> | Platform | Chrome | Result |
-> |---|---|---|
-> | macOS 15 | 151 | all checks passed |
-> | Linux (native, headless server) | 148 | all checks passed |
-> | WSL2 + Windows Chrome | 151 | all checks passed |
+> | Platform | Chrome | Verified by | What was measured there |
+> |---|---|---|---|
+> | macOS 15 | 151 | independent reviewer | launch · engine · CLI · state paths |
+> | Linux (native, headless) | 148 | independent reviewer | the above **+ security review** |
+> | WSL2 + Windows Chrome | 151 | maintainer | the above |
+> | Windows 10 (native) | 151 | independent reviewer | the above **+ end-to-end** |
+>
+> Not every check ran on every platform. The **security review** (no-token MCP refusal
+> confirmed with `ss`, engine unreachable off-loopback) was done on Linux. The
+> **end-to-end run** (`/health` → `/act` → real page extraction) was done on Windows.
+> UNC paths (`\\wsl.localhost\...`) also work — measured, contrary to our expectation.
 >
 > Security was reviewed independently on Linux: with no token the MCP HTTP server
 > exits and **never opens a socket** (verified with `ss`); the engine binds to
-> `127.0.0.1` only and is unreachable over the tailnet. Windows-native (non-WSL)
-> is implemented but not yet measured — reports welcome.
+> `127.0.0.1` only and is unreachable over the tailnet.
 
 ---
 

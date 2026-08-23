@@ -20,12 +20,6 @@ NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 
 [ "$NODE_MAJOR" -ge 18 ] || die "Node 18 or later is required (current: $(node -v))"
 echo "  ✅ node $(node -v)  ($NODE)"
 
-[ -d "$DIR/node_modules/playwright" ] || {
-  echo "  · Installing dependencies…"
-  (cd "$DIR" && npm install --no-audit --no-fund) || die "npm install failed"
-}
-echo "  ✅ dependencies"
-
 # ── Platform ────────────────────────────────────────────────────────
 case "$(uname -s)" in
   Darwin)
@@ -47,6 +41,12 @@ MAC
     exit 0
     ;;
 esac
+
+[ -d "$DIR/node_modules/playwright" ] || {
+  echo "  · Installing dependencies…"
+  (cd "$DIR" && npm install --no-audit --no-fund) || die "npm install failed"
+}
+echo "  ✅ dependencies"
 
 command -v systemctl >/dev/null 2>&1 || {
   echo "  🔵 systemd is not present. Please run manually: node engine.js"

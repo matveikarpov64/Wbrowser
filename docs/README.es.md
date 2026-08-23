@@ -27,8 +27,8 @@ Así que construimos la parte que importaba, de forma que funcione en todas part
 > del navegador donde ya iniciaste sesión. Unas 2.600 líneas entre JavaScript, Python y shell —
 > se leen en una tarde. Léela, cámbiala, hazla tuya.
 
-Wbrowser apunta a **Windows, macOS, Linux y WSL**. Verificado en macOS, Linux nativo
-y WSL; Windows nativo está implementado pero aún sin medir. Porque
+Wbrowser apunta a **Windows, macOS, Linux y WSL**. Medido en macOS, Linux nativo, WSL2 y Windows nativo — aunque no todas las
+comprobaciones se ejecutaron en todas las plataformas (ver tabla). Porque
 *"¿qué sistema operativo usas?"* nunca debería ser la razón por la que no puedes
 automatizar tu propio navegador.
 
@@ -267,16 +267,21 @@ Si la detección falla, usa `WBROWSER_CHROME=/ruta/a/chrome`.
 
 > **Probado en hardware real** (2026-08-24):
 >
-> | Plataforma | Chrome | Resultado |
-> |---|---|---|
-> | macOS 15 | 151 | todo correcto |
-> | Linux (nativo, servidor sin pantalla) | 148 | todo correcto |
-> | WSL2 + Chrome de Windows | 151 | todo correcto |
+> | Plataforma | Chrome | Verificado por | Qué se midió allí |
+> |---|---|---|---|
+> | macOS 15 | 151 | revisor independiente | arranque · motor · CLI · rutas de estado |
+> | Linux (nativo, sin pantalla) | 148 | revisor independiente | lo anterior + **revisión de seguridad** |
+> | WSL2 + Chrome de Windows | 151 | mantenedor | lo anterior |
+> | Windows 10 (nativo) | 151 | revisor independiente | lo anterior + **prueba de extremo a extremo** |
+>
+> 🔵 **No todas las comprobaciones se ejecutaron en todas las plataformas.** La revisión de
+> seguridad (rechazo sin token confirmado con `ss`, motor inalcanzable fuera de loopback) se
+> hizo en Linux. La prueba de extremo a extremo (`/health` → `/act` → extracción real) se hizo
+> en Windows. Las rutas UNC (`\\wsl.localhost\...`) también funcionan — medido, en contra de lo que esperábamos.
 >
 > La seguridad se revisó por separado en Linux: sin token el servidor MCP HTTP
 > termina y **nunca abre un socket** (verificado con `ss`); el motor escucha solo
-> en `127.0.0.1` y no es alcanzable por la red interna. 🔵 Windows nativo (sin WSL)
-> está implementado pero aún no medido.
+> en `127.0.0.1` y no es alcanzable por la red interna.
 
 ---
 

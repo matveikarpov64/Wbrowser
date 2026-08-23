@@ -21,6 +21,19 @@ jobs:
         with:
           node-version: '20'
 
+      - name: No build artefacts or caches are tracked
+        shell: bash
+        run: |
+          # 🔴 __pycache__/*.pyc once made it into the first commit because
+          #    .gitignore had node_modules but nothing for Python. Neither of the
+          #    two people reviewing it noticed — it was caught only because a file
+          #    count didn't add up. Don't rely on eyes for this again.
+          junk=$(git ls-files | grep -E '\.py[cod]$|__pycache__|node_modules/|\.DS_Store|\.env$|\.log$|package-lock\.json' || true)
+          if [ -n "$junk" ]; then
+            echo "::error::These should not be tracked:"; echo "$junk"; exit 1
+          fi
+          echo "clean"
+
       - name: JavaScript syntax
         run: |
           node --check engine.js
