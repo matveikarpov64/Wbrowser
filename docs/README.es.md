@@ -321,7 +321,7 @@ Si la detección falla, usa `WBROWSER_CHROME=/ruta/a/chrome`.
 > hizo en Linux. La prueba de extremo a extremo (`/health` → `/act` → extracción real) se hizo
 > en Windows. Las rutas UNC (`\\wsl.localhost\...`) también funcionan — medido, en contra de lo que esperábamos.
 >
-> La seguridad se revisó por separado en Linux: sin token el servidor MCP HTTP
+> La revisión de seguridad se hizo en Linux, en otra máquina: sin token el servidor MCP HTTP
 > termina y **nunca abre un socket** (verificado con `ss`); el motor escucha solo
 > en `127.0.0.1` y no es alcanzable por la red interna.
 

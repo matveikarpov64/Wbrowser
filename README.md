@@ -390,7 +390,7 @@ Override with `WBROWSER_CHROME=/path/to/chrome` if detection fails.
 > **end-to-end run** (`/health` → `/act` → real page extraction) was done on Windows.
 > UNC paths (`\\wsl.localhost\...`) also work — measured, contrary to our expectation.
 >
-> Security was reviewed independently on Linux: with no token the MCP HTTP server
+> The security review was done on Linux, on a different machine: with no token the MCP HTTP server
 > exits and **never opens a socket** (verified with `ss`); the engine binds to
 > `127.0.0.1` only and is unreachable over the tailnet.
 
