@@ -61,6 +61,28 @@ just drives the window that's already open.
 
 ---
 
+### One login often unlocks many sites
+
+This is the part that makes it worth the setup. Log into Google once in that window and:
+
+```
+Google itself       google.com · youtube.com · your Workspace apps
+Sites using Google SSO   your CRM, your booking system, your dashboards —
+                         whatever "Sign in with Google" reaches
+Everything else     log in by hand once; it stays
+```
+
+Measured on a real profile: **one Google sign-in** brought along YouTube and two
+internal business systems that use Google SSO — none of which were logged into
+separately. The rest (GitHub, Reddit, a bank-like portal) were signed into by hand
+once and have persisted since.
+
+So the setup cost is roughly: *one Google login, plus one login each for whatever
+doesn't use Google.* After that your agent reaches all of it.
+
+🔴 The flip side is the same fact: **whoever can drive this browser can act on every
+one of those sites.** See [Security](#security).
+
 ## Quick start
 
 ```bash

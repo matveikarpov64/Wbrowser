@@ -55,6 +55,28 @@ solo controla la ventana que ya está abierta.
 
 ---
 
+### Un inicio de sesión abre muchos sitios
+
+Esta es la parte que hace que valga la pena configurarlo. Inicia sesión en Google
+**una vez** en esa ventana y:
+
+```
+Google en sí          google.com · youtube.com · tus apps de Workspace
+Sitios con Google SSO  todo lo que alcance "Iniciar sesión con Google" —
+                       sistemas internos, reservas, paneles de control
+Todo lo demás         inicia sesión a mano una vez; se mantiene
+```
+
+Medido en un perfil real: **un solo inicio de sesión de Google** trajo consigo YouTube
+y **dos sistemas internos en los que nunca se inició sesión por separado** (usan Google SSO).
+El resto (GitHub, Reddit, etc.) se inició a mano una vez y sigue activo.
+
+Así que el coste inicial es: *un inicio de sesión de Google, más uno por cada sitio
+que no use Google.* Después de eso, tu agente llega a todos.
+
+🔴 La otra cara es el mismo hecho: **quien pueda manejar este navegador puede actuar
+en todos esos sitios como tú.** Consulta [Seguridad](#seguridad).
+
 ## Inicio rápido
 
 ```bash
