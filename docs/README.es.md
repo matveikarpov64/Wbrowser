@@ -2,10 +2,12 @@
 
 # 🤖 Wbrowser
 
-**Controla el Chrome donde ya iniciaste sesión — desde tu terminal o desde cualquier asistente de IA.**
+**Dale a tu IA un asiento en tu propio Chrome — no un navegador aparte.**
 
-Sin claves de API. Sin integraciones. Sin volver a iniciar sesión.
-Tu navegador, tus sesiones, tu máquina.
+Esto no es un navegador con IA. Es tu Chrome de siempre, con tus sesiones ya dentro,
+que un asistente puede manejar *mientras tú miras y usas la misma ventana*.
+
+Sin claves de API. Sin integraciones. Sin volver a iniciar sesión. Cierra la ventana y se acabó.
 
 [English](../README.md) · [한국어](README.ko.md) · [中文](README.zh.md) · [Español](README.es.md)
 
@@ -15,10 +17,22 @@ Tu navegador, tus sesiones, tu máquina.
 
 ## Por qué existe
 
-**Aside** — el navegador con IA que inspiró esto — hoy funciona **solo en macOS**.
-Si usas Windows o Linux, sencillamente no puedes tenerlo.
+Los navegadores con IA tienen todos la misma forma: instalas un *navegador nuevo* con
+un asistente dentro — **Aside**, **Comet**, **Dia**. Esa forma cuesta tres cosas:
 
-Así que construimos la parte que importaba, de forma que funcione en todas partes.
+| Su forma | Lo que cuesta |
+|---|---|
+| Un navegador nuevo que instalar | Perfil nuevo, sesiones nuevas, ajustes nuevos |
+| El asistente vive dentro | Tus sesiones quedan en **la compilación de otro** |
+| La plataforma la eligen ellos | Aside y Dia son solo para macOS hoy |
+
+**Nosotros tomamos el arreglo opuesto.** Ningún navegador nuevo — tu Chrome de siempre,
+tus sesiones de siempre, y el asistente trabaja *en la ventana que ya estás mirando*.
+Ves aterrizar cada clic y puedes recuperar el ratón a mitad de tarea. Nada que migrar,
+nada que entregar.
+
+Esa decisión es también la razón de que funcione en Windows, macOS, Linux y WSL:
+**no tuvimos que construir un navegador para cada uno, así que no había plataforma que elegir.**
 
 > **¿Lo necesitas? Constrúyelo.**
 >

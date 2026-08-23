@@ -2,10 +2,12 @@
 
 # 🤖 Wbrowser
 
-**Drive the Chrome you're already logged into — from your terminal, or from any AI assistant.**
+**Give your AI a seat at your own Chrome — not a browser of its own.**
 
-No API keys. No integrations. No re-logging-in.
-Your browser, your sessions, your machine.
+This is not an AI browser. It's your everyday Chrome, with your logins already in it,
+that an assistant can drive *while you watch and use the same window*.
+
+No API keys. No integrations. No re-logging-in. Close the window and it's over.
 
 [English](README.md) · [한국어](docs/README.ko.md) · [中文](docs/README.zh.md) · [Español](docs/README.es.md)
 
@@ -21,10 +23,22 @@ Your browser, your sessions, your machine.
 
 ## Why this exists
 
-**Aside** — the AI browser that inspired this — is **macOS only** today. If you're on
-Windows or Linux, you simply can't have it.
+AI browsers all take the same shape: you install a *new browser* with an assistant
+inside — **Aside**, **Comet**, **Dia**. That shape costs you three things:
 
-So we built the part that mattered, in a way that runs everywhere.
+| Their shape | What it costs |
+|---|---|
+| A new browser to install | A new profile, new logins, new defaults |
+| The assistant lives inside it | Your sessions sit in someone else's build |
+| Platform is their choice | Aside and Dia are macOS-only today |
+
+**We took the opposite arrangement.** No new browser — your existing Chrome, your
+existing logins, and the assistant works *in the window you're already looking at*.
+You watch every click land and can take the mouse back mid-task. Nothing to migrate,
+nothing to hand over.
+
+That choice is also why this runs on Windows, macOS, Linux and WSL: we didn't have to
+build a browser for each one, so there was no platform to pick.
 
 > **Need something? Build it.**
 >
