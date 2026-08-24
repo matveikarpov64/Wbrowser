@@ -413,7 +413,19 @@ Esta herramienta controla un navegador que contiene **todas tus sesiones**. Trá
 
 ---
 
-## Ejecutar al arrancar
+## Después de reiniciar
+
+Con una orden vuelve todo:
+
+```bash
+cd /ruta/a/Wbrowser && ./wb up
+```
+
+Levanta Chrome y el motor, y deja en paz al que ya esté corriendo.
+Luego `./wb status` te dice si tus sesiones siguen ahí — viven en el perfil del
+disco, así que normalmente sí.
+
+### Arrancar el motor automáticamente
 
 ```bash
 # Linux / WSL (servicio de usuario systemd)
@@ -421,8 +433,21 @@ Esta herramienta controla un navegador que contiene **todas tus sesiones**. Trá
 systemctl --user status wbrowser
 ```
 
-El motor arranca automáticamente. El **navegador** todavía hay que abrirlo — es un
-proceso de escritorio, y cuándo se abre debería ser decisión tuya.
+Esto cubre solo el **motor**. El **navegador** hay que abrirlo — es un proceso de
+escritorio, y una herramienta que abre sola una ventana del navegador al iniciar
+sesión no es una herramienta que quieras. Así que tras reiniciar sigue siendo
+`./wb up`, o abre Chrome tú y deja que el motor ya en marcha se conecte.
+
+En **macOS y Windows** todavía no hay instalador equivalente: ejecuta `./wb up`
+cuando lo necesites. (Un plist de launchd y un acceso directo en la carpeta de
+Inicio son ambos pequeños; no están escritos porque nadie los ha medido en una
+máquina real, y este README no afirma lo que no se ha ejecutado.)
+
+> 🔴 **No te hagas un acceso directo que lance Chrome con `--remote-debugging-port`
+> sobre tu perfil normal.** Desde Chrome 136 (marzo de 2025) ahí la opción se
+> **ignora**: Chrome arranca, el puerto nunca se abre y nada explica por qué.
+> `launch.js` pasa un `--user-data-dir` dedicado, que es lo único que Chrome sigue
+> aceptando. Déjaselo a `./wb up`.
 
 ---
 

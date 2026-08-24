@@ -486,16 +486,41 @@ This tool drives a browser that holds **all your logins**. Treat it accordingly.
 
 ---
 
-## Run on boot
+## After a reboot
+
+One command brings everything back:
 
 ```bash
-# Linux / WSL (systemd user service)
+cd /path/to/Wbrowser && ./wb up
+```
+
+It starts Chrome and the engine, and leaves either alone if it is already up.
+Then `./wb status` tells you whether your logins survived — they live in the
+profile on disk, so they normally do.
+
+### Starting the engine automatically
+
+```bash
+# Linux / WSL — systemd user service
 ./install.sh
 systemctl --user status wbrowser
 ```
 
-The engine starts automatically. The **browser** still needs launching — it's a
-desktop process, and it should be your choice when it opens.
+This covers the **engine** only. The **browser** is a desktop process and stays a
+deliberate choice — a tool that silently opens a browser window on login is not a
+tool you want. So after a reboot it is still `./wb up`, or launch Chrome yourself
+and let the already-running engine attach.
+
+On **macOS and Windows** there is no equivalent installer yet: run `./wb up` when
+you need it. (A launchd plist and a Startup-folder shortcut are both small; they
+are not written because nobody has measured them on a real machine, and this
+README does not claim what has not been run.)
+
+> 🔴 **Do not write your own shortcut that launches Chrome with
+> `--remote-debugging-port` on your normal profile.** Since Chrome 136 (March 2025)
+> the flag is ignored there — Chrome starts, the port never opens, and nothing says
+> why. `launch.js` passes a dedicated `--user-data-dir`, which is the only
+> arrangement Chrome still honours. Let `./wb up` do it.
 
 ---
 
