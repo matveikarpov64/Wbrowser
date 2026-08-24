@@ -99,8 +99,40 @@ en todos esos sitios como tú.** Consulta [Seguridad](#seguridad).
 
 ## Inicio rápido
 
+**macOS · Linux · WSL** — una sola orden:
+
 ```bash
-git clone https://github.com/<tu-usuario>/Wbrowser.git
+curl -fsSL https://raw.githubusercontent.com/w-partners/Wbrowser/main/setup.sh | bash
+```
+
+Comprueba lo que tienes, clona, instala, deja `wb` en tu PATH y abre la ventana del
+navegador. Luego inicias sesión en tus sitios en esa ventana — a mano, como siempre —
+y la instalación está hecha.
+
+<details>
+<summary><b>Windows nativo (PowerShell, sin WSL)</b></summary>
+
+```powershell
+git clone https://github.com/w-partners/Wbrowser.git
+cd Wbrowser
+$env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1; npm install
+node launch.js          # inicia sesión en la ventana que se abre
+node engine.js          # deja esto corriendo
+node bin\wbrowser.js go https://github.com
+```
+
+`wb` es un script de bash, así que en Windows no funciona: usa
+`node bin\wbrowser.js` en su lugar. Todo lo demás es idéntico.
+
+🔵 **WSL es más cómodo**: `wsl --install` una vez y ejecuta dentro de Ubuntu la orden
+de arriba. En ambos casos maneja tu **Chrome de Windows**.
+</details>
+
+<details>
+<summary><b>O hazlo a mano (cualquier plataforma)</b></summary>
+
+```bash
+git clone https://github.com/w-partners/Wbrowser.git
 cd Wbrowser
 # Wbrowser usa el Chrome *del sistema*, así que la descarga del navegador
 # de Playwright es innecesaria — omítela y ahorra ~400MB:
@@ -112,7 +144,17 @@ node engine.js       # 3. inicia el motor de control
 ./wb go https://example.com
 ```
 
-Eso es todo. **El paso 2 es lo único que haces manualmente.**
+**El paso 2 es lo único que haces manualmente.**
+</details>
+
+### Si la instalación se detiene
+
+No se queda a medias: **se para y dice por qué**. Las dos más frecuentes:
+
+| Si dice | Haz esto |
+|---|---|
+| `several user folders` (WSL) | `ls /mnt/c/Users` para ver cuál es tu cuenta, y luego<br>`WBROWSER_PROFILE_DIR=/mnt/c/Users/<tú>/.wbrowser ./wb up` |
+| No encuentra Chrome | `WBROWSER_CHROME=/ruta/a/chrome ./wb up` |
 
 > **Si `./wb` dice "Permission denied"** — el bit de ejecución se perdió al clonar.
 > Se arregla una sola vez:

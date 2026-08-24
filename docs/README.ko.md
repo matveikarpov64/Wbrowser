@@ -135,8 +135,39 @@ Wbrowser 는 이미 열린 창을 조종할 뿐입니다.
 
 ## 시작하기
 
+**맥 · 리눅스 · WSL** — 한 줄이면 됩니다:
+
 ```bash
-git clone https://github.com/<계정>/Wbrowser.git
+curl -fsSL https://raw.githubusercontent.com/w-partners/Wbrowser/main/setup.sh | bash
+```
+
+필요한 게 깔려 있는지 확인하고, 내려받고, 설치하고, `wb` 를 어디서든 쓸 수 있게 걸고,
+브라우저 창까지 띄웁니다. 그 창에서 평소처럼 **직접 로그인**하시면 설치는 끝입니다.
+
+<details>
+<summary><b>윈도우에서 (WSL 없이 PowerShell 로)</b></summary>
+
+```powershell
+git clone https://github.com/w-partners/Wbrowser.git
+cd Wbrowser
+$env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1; npm install
+node launch.js          # 창이 뜨면 거기서 로그인하세요
+node engine.js          # 이 창은 켜둔 채로
+node bin\wbrowser.js go https://github.com
+```
+
+`wb` 는 bash 스크립트라 윈도우에서는 안 돕니다. 대신 `node bin\wbrowser.js` 를 쓰시면
+나머지는 완전히 같습니다.
+
+🔵 **WSL 이 더 편합니다.** `wsl --install` 한 번 하고 우분투 안에서 위의 한 줄을 실행하시면
+됩니다. 어느 쪽이든 결국 **윈도우 크롬**을 조종합니다.
+</details>
+
+<details>
+<summary><b>직접 하고 싶다면 (모든 플랫폼)</b></summary>
+
+```bash
+git clone https://github.com/w-partners/Wbrowser.git
 cd Wbrowser
 # Wbrowser 는 *시스템에 깔린* 크롬을 쓰므로 playwright 가 자기 브라우저를
 # 따로 받을 필요가 없습니다. 건너뛰면 400MB 쯤 절약됩니다:
@@ -148,7 +179,17 @@ node engine.js       # 3. 조종 엔진 켜기
 ./wb go https://example.com
 ```
 
-끝입니다. **2번만 사람이 하는 일**이고, 나머지는 한 번 켜두면 됩니다.
+**2번만 사람이 하는 일**이고, 나머지는 한 번 켜두면 됩니다.
+</details>
+
+### 설치가 멈추면
+
+어중간하게 끝내지 않고 **멈추면서 이유를 말합니다.** 자주 나오는 둘:
+
+| 이런 말이 나오면 | 이렇게 |
+|---|---|
+| `several user folders` (WSL) | `ls /mnt/c/Users` 로 본인 계정 폴더를 확인한 뒤<br>`WBROWSER_PROFILE_DIR=/mnt/c/Users/<계정>/.wbrowser ./wb up` |
+| 크롬을 못 찾음 | `WBROWSER_CHROME=/크롬/경로 ./wb up` |
 
 > **`./wb` 가 "Permission denied" 라고 하면** — 내려받는 과정에서 실행 권한이
 > 빠진 것입니다. 한 번만 고치면 됩니다:

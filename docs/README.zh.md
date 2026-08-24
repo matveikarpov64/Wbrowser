@@ -96,8 +96,38 @@ Google 自身      google.com · youtube.com · 你的 Workspace 应用
 
 ## 快速开始
 
+**macOS · Linux · WSL** —— 一条命令：
+
 ```bash
-git clone https://github.com/<你的账号>/Wbrowser.git
+curl -fsSL https://raw.githubusercontent.com/w-partners/Wbrowser/main/setup.sh | bash
+```
+
+它会检查环境、克隆代码、安装依赖、把 `wb` 加到 PATH，并打开浏览器窗口。
+然后你在那个窗口里像平常一样**手动登录**，安装就完成了。
+
+<details>
+<summary><b>Windows 原生（PowerShell，不用 WSL）</b></summary>
+
+```powershell
+git clone https://github.com/w-partners/Wbrowser.git
+cd Wbrowser
+$env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1; npm install
+node launch.js          # 在打开的窗口里登录你的网站
+node engine.js          # 这个窗口保持运行
+node bin\wbrowser.js go https://github.com
+```
+
+`wb` 是 bash 脚本，在 Windows 上跑不了，用 `node bin\wbrowser.js` 代替即可，其余完全一致。
+
+🔵 **WSL 更省事**：`wsl --install` 一次，然后在 Ubuntu 里执行上面那条命令。
+两种方式最终操作的都是**你的 Windows Chrome**。
+</details>
+
+<details>
+<summary><b>想手动装（任意平台）</b></summary>
+
+```bash
+git clone https://github.com/w-partners/Wbrowser.git
 cd Wbrowser
 # Wbrowser 使用*系统已安装的* Chrome，无需 Playwright 自带浏览器。
 # 跳过下载可节省约 400MB：
@@ -109,7 +139,17 @@ node engine.js       # 3. 启动控制引擎
 ./wb go https://example.com
 ```
 
-就这样。**只有第 2 步需要人工操作**。
+**只有第 2 步需要人工操作**。
+</details>
+
+### 如果安装中断
+
+它不会装到一半就结束，而是**停下来并说明原因**。最常见的两种：
+
+| 提示 | 处理 |
+|---|---|
+| `several user folders`（WSL） | `ls /mnt/c/Users` 找到你的账号目录，然后<br>`WBROWSER_PROFILE_DIR=/mnt/c/Users/<你>/.wbrowser ./wb up` |
+| 找不到 Chrome | `WBROWSER_CHROME=/chrome/路径 ./wb up` |
 
 > **如果 `./wb` 提示 "Permission denied"** —— 克隆时执行权限丢失了。执行一次即可：
 > ```bash
