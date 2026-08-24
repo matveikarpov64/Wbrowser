@@ -1,40 +1,72 @@
-# 🔴 Real login data — never commit this.
-# Runtime state now defaults to the OS state directory, not the repo,
-# but these stay here as a second line of defence.
-.wbrowser/
-*.session.json
-session.json
-wbrowser-session.json
-runtime.json
+# 🔴 This is an ALLOW-LIST, not a deny-list. Everything is ignored by default and
+#    only the file types this project actually ships are let back in.
+#
+#    Why it is inverted: this repo is developed inside an agent harness, so private
+#    files (agent workspace, local config, screenshots, session state) live in the
+#    same tree as the published source. A deny-list only blocks what someone thought
+#    to list. Measured 2026-08-24: a deny-list that looked complete still let through
+#    .env, .claude/, scratchpad/, job files, `shot.png` from `wb shot`, and a Chrome
+#    `Login Data` DB. The failure mode is silent — you find out after it is public.
+#
+#    A deny-list is wrong here for a structural reason: a new kind of junk file is
+#    ignored by default, while a new source file fails loudly at `git status` and
+#    gets a line added below. Mistakes land on the safe side.
+#
+# To add a genuinely new source file type, add an un-ignore line in the right group.
 
-# Logs (they contain visited URLs)
-*.log
+# ---- deny everything -------------------------------------------------------
+/*
+!/.gitignore
 
-# Local job definitions.
-# 🔴 Allow-list, not deny-list: a job file names the sites you automate and the
-#    selectors you click. That is your routine, so the default is "not published".
-#    Only the shipped examples are tracked.
-jobs/*
-!jobs/example-*.json
+# ---- directories this project ships ----------------------------------------
+!/bin/
+!/docs/
+!/jobs/
+!/.github/
 
-# Secrets and local tool config
+# ---- source ----------------------------------------------------------------
+!*.js
+!*.py
+!*.sh
+!*.html
+!/wb
+!/wbrowser.service
+
+# ---- documentation and metadata --------------------------------------------
+!*.md
+!/LICENSE
+!/package.json
+!/accounts.json
+!/.github/**/*.yml
+
+# ---- job definitions: examples only ----------------------------------------
+# 🔴 A job file names the sites you automate and the selectors you click.
+#    That is your routine, so the default is "not published".
+/jobs/*
+!/jobs/example-*.json
+
+# ---- re-deny things that would otherwise slip through the rules above ------
+# These matter because the extension rules are broad: a stray note.md or a
+# harness CLAUDE.md would otherwise be let straight back in by `!*.md`.
+/CLAUDE.md
+/project-specific.md
+/AGENT/
+/.claude/
+/.handoff/
+/.mcp.json
+/scratchpad/
+/tmp/
+/node_modules/
+/package-lock.json
+
+# Runtime state — a cookie IS the login
+/.wbrowser*/
+*session.json
+*runtime.json
+*Cookies*
+*Login Data*
+
+# Secrets
 .env
 .env.*
 !.env.example
-.claude/
-.mcp.json
-
-# Scratch space
-scratchpad/
-tmp/
-
-node_modules/
-package-lock.json
-.DS_Store
-
-# Python bytecode — leaked into the first commit before this line existed
-__pycache__/
-*.py[cod]
-
-# Harness agent workspace — never publish
-AGENT/
