@@ -7,9 +7,15 @@
 Your assistant can search the web, but it can't open your inbox, your dashboard, or your
 company's internal tool. Everything useful is behind a sign-in it doesn't have.
 
-Wbrowser gives it a seat at **your own Chrome** — the one you're already signed into.
-Same window, same tabs. You watch each click land — in its own tab, never the one
-you are reading.
+Wbrowser gives it a seat at **a real Chrome that you sign into once, by hand.**
+Not a headless browser and not a copy of your profile — a window you use too. You
+watch each click land, in a tab the agent opened for itself, never the one you are
+reading.
+
+🔵 To be plain about the setup: Chrome 136+ refuses remote debugging on your default
+profile, so this runs a dedicated one and **you sign in there once.** After that the
+session persists — one Google sign-in also carried YouTube and two systems that use
+"Sign in with Google" on a real profile we measured. It is one setup, not zero.
 
 And it goes the other way: get halfway through something tedious, then hand that
 exact tab over — `./wb take 2` — and the agent carries on from the page you built.
@@ -57,8 +63,8 @@ inside — **Aside**, **Comet**, **Dia**. That shape costs you three things:
 | The assistant lives inside it | Your sessions sit in someone else's build |
 | Platform is their choice | Aside and Dia are macOS-only today |
 
-**We took the opposite arrangement.** No new browser — your existing Chrome, your
-existing logins, and the assistant works *in the window you're already looking at*.
+**We took the opposite arrangement.** No browser to install and nothing to migrate —
+it drives the Chrome already on your machine, in a window you can watch and use.
 You watch every click land, in a tab the agent opened for itself. Nothing to migrate,
 nothing to hand over.
 
@@ -74,8 +80,8 @@ build a browser for each one, so there was no platform to pick.
 > **Need something? Build it.**
 >
 > That's the whole idea. Not a product waiting on someone else's roadmap —
-> a small tool you own, on the machine you already use, in the browser you're
-> already logged into. About 2,600 lines of JavaScript, Python and shell — small enough to read
+> a small tool you own, on the machine you already use, in the browser you signed
+> into yourself. About 2,600 lines of JavaScript, Python and shell — small enough to read
 > in an afternoon. Read it, change it, make it yours.
 
 Wbrowser targets **Windows, macOS, Linux, and WSL** — because "which OS are you on?"

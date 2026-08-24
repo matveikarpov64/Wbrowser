@@ -4,10 +4,18 @@
 
 **Dale a tu IA un asiento en tu propio Chrome — no un navegador aparte.**
 
-Esto no es un navegador con IA. Es tu Chrome de siempre, con tus sesiones ya dentro,
-que un asistente puede manejar *mientras tú miras y usas la misma ventana*.
+Esto no es un navegador con IA. Es el Chrome de tu máquina, en el que **inicias sesión
+una vez, a mano**, y que un asistente puede manejar *en una ventana que tú también ves
+y usas*.
 
-Sin claves de API. Sin integraciones. Sin volver a iniciar sesión. Cierra la ventana y se acabó.
+Sin claves de API. Sin integraciones. Inicias sesión una vez y la sesión se mantiene.
+Cierra la ventana y se acabó.
+
+🔵 Para ser exactos sobre la instalación: Chrome 136+ no permite depuración remota en
+tu perfil por defecto, así que esto arranca un perfil dedicado y **tú inicias sesión
+ahí una vez**. A partir de entonces la sesión persiste: en un perfil que medimos, un
+único inicio de sesión de Google trajo también YouTube y dos sistemas internos que
+usan "Iniciar sesión con Google". Es una configuración, no ninguna.
 
 Funciona en **Windows, macOS, Linux y WSL** — cada uno medido en hardware real, en
 **otra máquina y por otra persona** distinta de quien escribió esa parte:
@@ -46,8 +54,8 @@ un asistente dentro — **Aside**, **Comet**, **Dia**. Esa forma cuesta tres cos
 | El asistente vive dentro | Tus sesiones quedan en **la compilación de otro** |
 | La plataforma la eligen ellos | Aside y Dia son solo para macOS hoy |
 
-**Nosotros tomamos el arreglo opuesto.** Ningún navegador nuevo — tu Chrome de siempre,
-tus sesiones de siempre, y el asistente trabaja *en la ventana que ya estás mirando*.
+**Nosotros tomamos el arreglo opuesto.** Ningún navegador que instalar y nada que
+migrar: maneja el Chrome que ya tienes, en una ventana que tú también ves y usas.
 Ves aterrizar cada clic, y esos clics ocurren en **una pestaña que el agente abrió para
 sí mismo**. Nada que migrar, nada que entregar.
 
