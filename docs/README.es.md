@@ -72,7 +72,7 @@ Esa decisión es también la razón de que funcione en Windows, macOS, Linux y W
 >
 > Esa es la idea completa. No un producto que espera la hoja de ruta de otro,
 > sino una herramienta pequeña que es tuya, en la máquina que ya usas, dentro
-> del navegador donde ya iniciaste sesión. Unas 2.600 líneas entre JavaScript, Python y shell —
+> del navegador en el que iniciaste sesión tú mismo. Unas 2.600 líneas entre JavaScript, Python y shell —
 > se leen en una tarde. Léela, cámbiala, hazla tuya.
 
 Wbrowser apunta a **Windows, macOS, Linux y WSL**. Medido en macOS, Linux nativo, WSL2 y Windows nativo — aunque no todas las
