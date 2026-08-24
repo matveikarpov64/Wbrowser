@@ -9,6 +9,27 @@ has the detail.
 
 ---
 
+## 0.4.1 — 2026-08-25
+
+**Published to npm, and registered so the MCP Registry can verify we own it.**
+
+### Added
+- `server.json` — the MCP Registry manifest. Declares this as an npm package with a
+  stdio transport under the name `io.github.w-partners/wbrowser`.
+- `mcpName` in `package.json`. The registry verifies ownership by checking that this
+  matches the name in `server.json`, so the two are kept in step deliberately.
+
+### Changed
+- Package description no longer says "already-logged-in Chrome". It never was — you
+  sign into a dedicated profile once, by hand (see 0.4.0's README correction). The
+  npm page renders this string, so leaving it would have republished the same claim
+  we had just removed from the README.
+- `.gitignore` allows `/server.json`. The ignore file is an allow-list, so a new
+  top-level file is invisible until it is named — the same thing happened to
+  `/scripts/` in 0.4.0.
+
+---
+
 ## 0.4.0 — 2026-08-24
 
 **You can now tell which version you have, and whether a newer one exists.**

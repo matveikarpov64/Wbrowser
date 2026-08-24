@@ -37,6 +37,7 @@
 !*.md
 !/LICENSE
 !/package.json
+!/server.json
 !/accounts.json
 !/.github/**/*.yml
 

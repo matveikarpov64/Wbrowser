@@ -1,7 +1,8 @@
 {
   "name": "wbrowser",
-  "version": "0.4.0",
-  "description": "Drive your real, already-logged-in Chrome from the terminal or any MCP client",
+  "version": "0.4.1",
+  "mcpName": "io.github.w-partners/wbrowser",
+  "description": "Drive a real Chrome you signed into yourself, from the terminal or any MCP client",
   "type": "commonjs",
   "bin": {
     "wbrowser": "./bin/wbrowser.js"
@@ -46,6 +47,7 @@
     "wbrowser.service",
     "home.html",
     "accounts.json",
+    "server.json",
     "README.md",
     "LICENSE"
   ]
