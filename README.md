@@ -8,7 +8,8 @@ Your assistant can search the web, but it can't open your inbox, your dashboard,
 company's internal tool. Everything useful is behind a sign-in it doesn't have.
 
 Wbrowser gives it a seat at **your own Chrome** — the one you're already signed into.
-Same window, same tabs. You watch each click land and can take the mouse back mid-task.
+Same window, same tabs. You watch each click land — in its own tab, never the one
+you are reading.
 
 And it goes the other way: get halfway through something tedious, then hand that
 exact tab over — `./wb take 2` — and the agent carries on from the page you built.
@@ -58,8 +59,14 @@ inside — **Aside**, **Comet**, **Dia**. That shape costs you three things:
 
 **We took the opposite arrangement.** No new browser — your existing Chrome, your
 existing logins, and the assistant works *in the window you're already looking at*.
-You watch every click land and can take the mouse back mid-task. Nothing to migrate,
+You watch every click land, in a tab the agent opened for itself. Nothing to migrate,
 nothing to hand over.
+
+🔵 To be exact about what that does and does not mean: the agent never takes the tab
+you are reading and never pulls the window to the front, so you can keep working
+alongside it. It does not pause when you move the mouse — you are not interrupting
+it, you were simply never sharing a tab. When you *do* want it on the page you are
+looking at, you hand that tab over yourself with `./wb take <#>`.
 
 That choice is also why this runs on Windows, macOS, Linux and WSL: we didn't have to
 build a browser for each one, so there was no platform to pick.

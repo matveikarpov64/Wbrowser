@@ -48,8 +48,14 @@ un asistente dentro — **Aside**, **Comet**, **Dia**. Esa forma cuesta tres cos
 
 **Nosotros tomamos el arreglo opuesto.** Ningún navegador nuevo — tu Chrome de siempre,
 tus sesiones de siempre, y el asistente trabaja *en la ventana que ya estás mirando*.
-Ves aterrizar cada clic y puedes recuperar el ratón a mitad de tarea. Nada que migrar,
-nada que entregar.
+Ves aterrizar cada clic, y esos clics ocurren en **una pestaña que el agente abrió para
+sí mismo**. Nada que migrar, nada que entregar.
+
+🔵 Para que quede exacto lo que eso significa y lo que no: el agente **nunca toma la
+pestaña que estás leyendo ni trae la ventana al frente**, así que puedes seguir
+trabajando a su lado. Pero **no se detiene porque muevas el ratón**: no es que lo
+interrumpas y te ceda el paso, es que nunca compartisteis pestaña. Cuando sí quieras
+que trabaje en la página que estás viendo, se la entregas tú con `./wb take <#>`.
 
 Esa decisión es también la razón de que funcione en Windows, macOS, Linux y WSL:
 **no tuvimos que construir un navegador para cada uno, así que no había plataforma que elegir.**
