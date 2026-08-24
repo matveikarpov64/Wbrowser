@@ -75,6 +75,36 @@ solo controla la ventana que ya está abierta.
 
 ---
 
+### No se copia nada — es tu cuenta, en vivo
+
+Conviene ser preciso aquí, porque es lo que separa esto de la mayoría de
+herramientas parecidas.
+
+Wbrowser **no guarda ninguna copia de tus datos**. La carpeta de perfil contiene
+cookies — la prueba de que iniciaste sesión — y nada más. Tu correo, tus archivos,
+tus paneles siguen en los servidores del proveedor, igual que para tu teléfono. El
+agente los ve del mismo modo: presentando esa prueba y preguntando.
+
+```
+Servidores de Google      tu cuenta, tus datos
+        |
+        +-- Chrome del portátil    una sesión
+        +-- tu teléfono            una sesión
+        +-- Wbrowser               una sesión   <- la creaste al iniciar sesión
+```
+
+Dos consecuencias, y conviene sostener ambas:
+
+- 🔵 **Sin copias desactualizadas, sin sincronización, sin un segundo sitio que
+  proteger.** Cierra sesión desde Google y todas las sesiones terminan, incluida
+  esta. Nada queda en una carpeta esperando a ser robado.
+- 🔴 **Es la cuenta real, no un entorno aislado.** Cuando el agente abre tu correo,
+  es tu correo. El acceso es exactamente el tuyo — ni más, ni menos.
+
+> ⚠️ Copiar la carpeta de perfil no funciona de todos modos. Lo probamos: 685 cookies
+> quedaron en 3. Chrome invalida un perfil que no reconoce. Iniciar sesión a mano no
+> es un rodeo para eso — es **la única disposición que se sostiene**.
+
 ### Un inicio de sesión abre muchos sitios
 
 Esta es la parte que hace que valga la pena configurarlo. Inicia sesión en Google

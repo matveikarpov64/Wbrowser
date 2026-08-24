@@ -98,6 +98,36 @@ just drives the window that's already open.
 
 ---
 
+### Nothing is copied — it is your account, live
+
+This is worth being precise about, because it is the difference between this and
+most tools in the space.
+
+Wbrowser holds **no copy of your data**. The profile folder contains cookies —
+proof that you signed in — and nothing else. Your mail, your files, your dashboards
+stay on the provider's servers, exactly as they do for your phone. The agent sees
+them the same way your phone does: by presenting that proof and asking.
+
+```
+Google's servers          your account, your data
+        |
+        +-- your laptop Chrome     a session
+        +-- your phone             a session
+        +-- Wbrowser               a session   <- you created this by logging in
+```
+
+Two consequences, and you should hold both:
+
+- 🔵 **No stale copy, no sync, no second place to secure.** Log out on Google's
+  side and every session ends, including this one. Nothing lingers in a folder
+  waiting to be stolen.
+- 🔴 **It is the live account, not a sandbox.** When the agent opens your mail, it
+  is your mail. Access is exactly what you have — no more, and no less.
+
+> ⚠️ Copying a profile folder does not work anyway. We tried: 685 cookies became 3.
+> Chrome invalidates a profile it does not recognise. Signing in by hand is not a
+> workaround for that — it is the only arrangement that holds.
+
 ### One login often unlocks many sites
 
 This is the part that makes it worth the setup. Log into Google once in that window and:
