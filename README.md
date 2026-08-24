@@ -143,8 +143,40 @@ see [Security](#security) for the full threat model.
 
 ## Quick start
 
+**macOS · Linux · WSL** — one command:
+
 ```bash
-git clone https://github.com/<you>/Wbrowser.git
+curl -fsSL https://raw.githubusercontent.com/w-partners/Wbrowser/main/setup.sh | bash
+```
+
+It checks what you have, clones, installs, puts `wb` on your PATH and opens the
+browser window. Then you log into your sites in that window — by hand, as usual —
+and that is the whole setup.
+
+<details>
+<summary><b>Windows, natively (PowerShell — no WSL)</b></summary>
+
+```powershell
+git clone https://github.com/w-partners/Wbrowser.git
+cd Wbrowser
+$env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1; npm install
+node launch.js          # log into your sites in the window that opens
+node engine.js          # leave this running
+node bin\wbrowser.js go https://github.com
+```
+
+`wb` is a bash script, so on Windows use `node bin\wbrowser.js` in its place.
+Everything else is identical.
+
+**WSL is the easier route** if you have it: `wsl --install` once, then run the
+one-line command above inside Ubuntu. Either way it drives your Windows Chrome.
+</details>
+
+<details>
+<summary><b>Or do it by hand (any platform)</b></summary>
+
+```bash
+git clone https://github.com/w-partners/Wbrowser.git
 cd Wbrowser
 # Wbrowser drives your *system* Chrome, so Playwright's own browser
 # download is unnecessary — skip it and save ~400MB:
@@ -156,7 +188,18 @@ node engine.js       # 3. start the control engine
 ./wb go https://example.com
 ```
 
-That's it. Step 2 is the only thing you ever do manually.
+Step 2 is the only thing you ever do manually.
+</details>
+
+### If setup stops
+
+It stops rather than half-finishing, and the message names the cause. Two come up
+most often:
+
+| It says | Do this |
+|---|---|
+| `several user folders` (WSL) | `ls /mnt/c/Users` to find yours, then<br>`WBROWSER_PROFILE_DIR=/mnt/c/Users/<you>/.wbrowser ./wb up` |
+| Chrome not found | `WBROWSER_CHROME=/path/to/chrome ./wb up` |
 
 > **If `./wb` says "Permission denied"** — the executable bit didn't survive the
 > clone (some setups strip it). Fix it once:

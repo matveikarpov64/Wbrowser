@@ -17,7 +17,19 @@
 # 🔴 This script never kills Chrome. It may be a window the user was using.
 
 set -uo pipefail
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# 🔴 Resolve symlinks before taking the directory. Putting `wb` on your PATH means
+#    symlinking it (ln -s .../Wbrowser/wb ~/.local/bin/wb), and a plain `dirname` would
+#    then point at ~/.local/bin — where engine.js, launch.js and the Python helpers are
+#    not. The script would run and fail to find its own project.
+_SELF="${BASH_SOURCE[0]}"
+while [ -L "$_SELF" ]; do
+  _LINK="$(readlink "$_SELF")"
+  case "$_LINK" in
+    /*) _SELF="$_LINK" ;;
+    *)  _SELF="$(dirname "$_SELF")/$_LINK" ;;
+  esac
+done
+DIR="$(cd "$(dirname "$_SELF")" && pwd)"
 ENGINE="http://127.0.0.1:${WBROWSER_PORT:-7981}"
 CDP="http://127.0.0.1:${WBROWSER_CDP_PORT:-9222}"
 # 🔴 Logs record visited URLs — keep them out of the repo folder so zipping or
