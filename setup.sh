@@ -89,6 +89,67 @@ ok "node $(node -v)"
 #    would mean maintaining that list twice, and the two copies would drift.
 ok "git $(git --version | awk '{print $3}')"
 
+# -- 1b. Clear whatever is already running ------------------------------------
+# !! Re-running setup must land you in a known state, not add a second copy. Without
+#    this the new engine dies on EADDRINUSE while the old one keeps serving, and every
+#    change you make afterwards appears to do nothing.
+#
+#    Measured 2026-08-24: a *different project's* engine held port 7981 for ten hours.
+#    Every command went to it, so fixes to this code had no visible effect and were
+#    debugged for hours. That is the failure this section exists to prevent.
+#
+# :: Chrome is never touched. It may be the window you are working in, and the profile
+#    on disk keeps your logins either way -- there is nothing to gain by closing it.
+say "Clearing anything already running"
+
+# :: ss on Linux, lsof on macOS. !! If neither exists we say so rather than returning
+#    "nothing is listening" -- that would silently skip the cleanup this section is for.
+if command -v ss >/dev/null 2>&1; then
+  _port_pid() { ss -lptnH "sport = :$1" 2>/dev/null | grep -o 'pid=[0-9]*' | head -1 | cut -d= -f2; }
+elif command -v lsof >/dev/null 2>&1; then
+  _port_pid() { lsof -tiTCP:"$1" -sTCP:LISTEN 2>/dev/null | head -1; }
+else
+  info "no 'ss' or 'lsof' here, so a running engine cannot be found and stopped"
+  info "if setup fails with EADDRINUSE, stop the old engine yourself and re-run"
+  _port_pid() { echo ""; }
+fi
+
+for _port in 7981 7983; do
+  _pid="$(_port_pid "$_port")"
+  [ -n "$_pid" ] || continue
+  # !! Check what it actually is before killing it. The port number alone is not
+  #    identification -- see the ten-hour bug above.
+  # :: /proc is Linux-only; macOS answers the same question through ps.
+  if [ -r "/proc/$_pid/cmdline" ]; then
+    _cmd="$(tr '\0' ' ' < "/proc/$_pid/cmdline" 2>/dev/null || echo '')"
+  else
+    _cmd="$(ps -o command= -p "$_pid" 2>/dev/null || echo '')"
+  fi
+  case "$_cmd" in
+    *engine.js*|*mcp-server.js*)
+      kill "$_pid" 2>/dev/null && info "stopped engine on :$_port (pid $_pid)"
+      ;;
+    '')
+      info "port :$_port is held by pid $_pid, which we cannot inspect -- leaving it"
+      ;;
+    *)
+      # A foreign program on our port. Killing it would be overreach; say so and stop.
+      die "Port :$_port is in use by something that is not Wbrowser:
+       pid $_pid  --  $(printf '%.60s' "$_cmd")
+     Close it yourself, or run Wbrowser elsewhere with WBROWSER_PORT=<other>."
+      ;;
+  esac
+done
+
+# Wait for the ports to actually free up. `kill` returns immediately; binding does not.
+for _ in $(seq 1 20); do
+  [ -z "$(_port_pid 7981)" ] && break
+  sleep 0.25
+done
+[ -z "$(_port_pid 7981)" ] || die "Port :7981 is still held after stopping the engine.
+     Check with: ss -lptn 'sport = :7981'"
+ok "ports free"
+
 # -- 2. The code ------------------------------------------------------------
 say "Getting Wbrowser"
 if [ -d "$DEST/.git" ]; then
