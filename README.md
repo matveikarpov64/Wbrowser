@@ -583,6 +583,7 @@ README does not claim what has not been run.)
 
 ## Contributing & security
 
+- [CHANGELOG.md](CHANGELOG.md) — what changed in each release, and what is still unverified
 - [CONTRIBUTING.md](CONTRIBUTING.md) — the rules that shaped this code, and how to test it
 - [SECURITY.md](SECURITY.md) — 🔴 the threat model. Read it before running this on a
   shared machine: the Chrome debugging port has **no authentication**, so any local
