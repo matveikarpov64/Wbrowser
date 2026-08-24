@@ -5,6 +5,17 @@ has the detail.
 
 ---
 
+## Unreleased
+
+### Documentation
+- Says plainly what the arrangement is: nothing is copied. The profile holds
+  cookies; your data stays on the provider's servers, and the agent reaches it the
+  way your phone does. Both halves are stated — no stale copy and no second store
+  to secure, but also no sandbox: when the agent opens your mail, it is your mail,
+  with exactly your access. All four languages.
+
+---
+
 ## 0.3.0 — 2026-08-24
 
 **One command to install, and it survives being run twice.**
