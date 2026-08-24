@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# pre-commit — refuse to commit anything that must not be published.
+#
+# 🔴 Why this exists, and why it is not the same as .gitignore or CI:
+#      .gitignore   stops `git add` picking a file up by accident — but not `git add -f`,
+#                   and not a file that is already tracked.
+#      CI           runs after the push. By then the object is on GitHub; deleting it
+#                   later does not remove it from the history other people cloned.
+#      this hook    is the only layer that stops the commit from being made at all.
+#
+#    This repo is developed inside a larger agent harness, so private files sit in the
+#    same tree as the published source (AGENT/, .claude/, jobs/). One `git add -A` is
+#    all it takes. Measured 2026-08-24: AGENT/ was sitting untracked in the work tree
+#    of an already-public repo.
+#
+#    If you cloned this repo and do not run an agent harness, most of the paths below
+#    will never appear in your tree — the hook simply stays quiet. It is offered, not
+#    required. Install it with: scripts/install-hooks.sh
+#
+# To bypass deliberately: git commit --no-verify
+
+set -uo pipefail
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$staged" ] && exit 0
+
+fail=0
+
+# --- paths that are local-only by nature -----------------------------------
+# jobs/ is an allow-list: a job file names the sites you automate and the selectors
+# you click. That is the user's routine, not example code.
+bad=$(printf '%s\n' "$staged" | grep -E '^AGENT/|^\.claude/|^\.mcp\.json$|^scratchpad/|^tmp/|^\.env($|\.)|^jobs/' \
+      | grep -vE '^jobs/example-|^\.env\.example$' || true)
+if [ -n "$bad" ]; then
+  echo "❌ These are local-only and must never reach the public repo:" >&2
+  printf '   %s\n' $bad >&2
+  fail=1
+fi
+
+# --- runtime state: a cookie IS the login -----------------------------------
+state=$(printf '%s\n' "$staged" | grep -E 'session\.json$|runtime\.json$|^\.wbrowser/|Cookies$|\.log$' || true)
+if [ -n "$state" ]; then
+  echo "❌ Runtime/login state — a cookie is the login, do not publish it:" >&2
+  printf '   %s\n' $state >&2
+  fail=1
+fi
+
+# --- build junk -------------------------------------------------------------
+junk=$(printf '%s\n' "$staged" | grep -E '\.py[cod]$|__pycache__|^node_modules/|\.DS_Store$|^package-lock\.json$' || true)
+if [ -n "$junk" ]; then
+  echo "❌ Build artefacts / caches:" >&2
+  printf '   %s\n' $junk >&2
+  fail=1
+fi
+
+# --- secrets inside files that are legitimately tracked ---------------------
+# 🔵 Plain -E only. grep -P is GNU-only and would silently no-op on macOS BSD grep,
+#    turning this guard into a no-op exactly where nobody would notice.
+if [ -n "$staged" ]; then
+  hits=$(git diff --cached -U0 -- $staged 2>/dev/null \
+         | grep -E '^\+' \
+         | grep -E '(sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----)' \
+         || true)
+  if [ -n "$hits" ]; then
+    echo "❌ Possible credential in the staged diff:" >&2
+    printf '   %s\n' "$hits" | cut -c1-100 >&2
+    fail=1
+  fi
+fi
+
+# --- brand-new files: not blocked, but never silent --------------------------
+# 🔴 The ignore file is an allow-list, so a *new source file* is meant to get
+#    through — that is the point. But a stray note.md, TODO.md or an internal memo
+#    under docs/ gets through the same door. Those are the ones that quietly become
+#    public. So: don't block (that would fight contributors), but make it impossible
+#    to add a new file to this repo without seeing it named on screen first.
+newfiles=$(git diff --cached --name-only --diff-filter=A)
+if [ -n "$newfiles" ]; then
+  echo "🔵 New files in this commit — this repo is PUBLIC, confirm each one belongs:" >&2
+  printf '   + %s\n' $newfiles >&2
+  echo "" >&2
+fi
+
+if [ "$fail" -ne 0 ]; then
+  echo "" >&2
+  echo "Commit refused. Unstage those paths, or use --no-verify if you are certain." >&2
+  exit 1
+fi
+exit 0

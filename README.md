@@ -24,10 +24,11 @@ different machine, by someone other than the person who wrote that part:
 | Windows 10 | 151 | different machine & operator — incl. end-to-end |
 | macOS 15 | 151 | different machine & operator |
 | Linux (headless) | 148 | different machine & operator — incl. security review |
-| WSL2 | 151 | maintainer |
+| WSL2 | 151 | maintainer (self-verified) |
 
 <sub>Measured 2026-08-24. Not every check ran everywhere — details in
-[Platform notes](#platform-notes).</sub>
+[Platform notes](#platform-notes). WSL2 is the maintainer's own environment, so it
+is self-verified rather than independently checked.</sub>
 
 About **2,600 lines** of JavaScript, Python and shell. MIT. Small enough to read in an
 afternoon and change to suit you.
@@ -37,7 +38,7 @@ afternoon and change to suit you.
 [![check](https://github.com/w-partners/Wbrowser/actions/workflows/check.yml/badge.svg)](https://github.com/w-partners/Wbrowser/actions/workflows/check.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Node](https://img.shields.io/badge/node-%E2%89%A518-brightgreen)
-![Platforms](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20WSL%20%C2%B7%20Windows-verified-success)
+![Platforms](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-independently%20verified-success)
 ![Windows](https://img.shields.io/badge/Windows--native-verified-success)
 
 </div>
@@ -241,6 +242,12 @@ most often:
 > launches Chrome headless automatically. Force it either way with
 > `WBROWSER_HEADLESS=1` or `=0`. Note you can't log in by hand without a screen —
 > use `./sync-session.sh import` to bring sessions over from a desktop machine.
+>
+> To confirm it really is headless, check the **process arguments** —
+> `ps -o args= -p <chrome-pid>` should show `--headless=new` and
+> `--ozone-platform=headless`. That is how the Linux run above was verified.
+> 🔵 Don't use the User-Agent for this: `--headless=new` may or may not put
+> `HeadlessChrome` in the UA string, so the UA can't tell you either way.
 
 > **Windows users:** run these inside WSL, or use `node` directly on Windows —
 > both work. See [Platform notes](#platform-notes).
@@ -494,10 +501,10 @@ Override with `WBROWSER_CHROME=/path/to/chrome` if detection fails.
 >
 > | Platform | Chrome | Verified by | What was measured there |
 > |---|---|---|---|
-> | macOS 15 | 151 | separate operator | launch · engine · CLI · state paths |
-> | Linux (native, headless) | 148 | separate operator | the above **+ security review** |
-> | WSL2 + Windows Chrome | 151 | maintainer | the above |
-> | Windows 10 (native) | 151 | separate operator | the above **+ end-to-end** |
+> | macOS 15 | 151 | different machine & operator | launch · engine · CLI · state paths |
+> | Linux (native, headless) | 148 | different machine & operator | the above **+ security review** |
+> | WSL2 + Windows Chrome | 151 | maintainer (self-verified) | the above |
+> | Windows 10 (native) | 151 | different machine & operator | the above **+ end-to-end** |
 >
 > Not every check ran on every platform. The **security review** (no-token MCP refusal
 > confirmed with `ss`, engine unreachable off-loopback) was done on Linux. The

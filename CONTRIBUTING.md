@@ -23,6 +23,23 @@ These are not style preferences — each one came from a bug we actually hit:
 - **Cookies are credentials.** They are never printed, logged, or returned outside
   the explicit export path.
 
+### Optional: the pre-commit hook
+
+```bash
+scripts/install-hooks.sh
+```
+
+This repo is developed inside an agent harness, so private files (`AGENT/`,
+`.claude/`, `jobs/`) sit in the same tree as the published source — one `git add -A`
+is all it takes. The hook refuses commits containing those paths, runtime/login
+state, build junk, or credential-shaped strings.
+
+🔵 **You probably don't need it.** If you're not running a harness in this tree,
+most of what it guards will never appear and the hook stays quiet. It is offered,
+not required — which is also why installing it is a command you run rather than
+something `npm install` does behind your back. Git does not clone `.git/hooks`, so
+there is no way to ship a hook that installs itself, and that is a good thing.
+
 ## Testing
 
 **There is no automated test suite.** That is the largest gap in this project right now.

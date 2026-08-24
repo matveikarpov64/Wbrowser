@@ -20,7 +20,7 @@ Wbrowser 는 이미 열린 창을 조종만 합니다.
 | 윈도우 10 | 151 | 다른 머신·다른 사람 · E2E 포함 |
 | macOS 15 | 151 | 다른 머신·다른 사람 |
 | 리눅스 (화면 없음) | 148 | 다른 머신·다른 사람 · 보안 검토 포함 |
-| WSL2 | 151 | 관리자 |
+| WSL2 | 151 | 관리자 (자기검증) |
 
 <sub>2026-08-24 측정. 모든 항목을 모든 환경에서 잰 것은 아닙니다 — [플랫폼](#어느-운영체제에서-되나요) 참고.</sub>
 
@@ -32,7 +32,7 @@ Wbrowser 는 이미 열린 창을 조종만 합니다.
 [![check](https://github.com/w-partners/Wbrowser/actions/workflows/check.yml/badge.svg)](https://github.com/w-partners/Wbrowser/actions/workflows/check.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../LICENSE)
 ![Node](https://img.shields.io/badge/node-%E2%89%A518-brightgreen)
-![Platforms](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20WSL%20%C2%B7%20Windows-verified-success)
+![Platforms](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-independently%20verified-success)
 
 
 </div>

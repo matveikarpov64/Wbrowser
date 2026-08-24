@@ -9,12 +9,25 @@
 
 无需 API 密钥。无需配置集成。无需重新登录。关掉窗口就结束了。
 
+可在 **Windows、macOS、Linux 和 WSL** 上运行 —— 每一项都在真实硬件上实测，
+由**另一台机器上的另一个人**验证，而不是写这部分代码的人：
+
+| 环境 | Chrome | 验证者 |
+|---|---|---|
+| Windows 10 | 151 | 另一台机器·另一个人 · 含端到端 |
+| macOS 15 | 151 | 另一台机器·另一个人 |
+| Linux（无显示器） | 148 | 另一台机器·另一个人 · 含安全审查 |
+| WSL2 | 151 | 维护者（自行验证） |
+
+<sub>2026-08-24 实测。并非每一项都在每个环境下测过 —— 详见下文平台说明。
+WSL2 是维护者自己的环境，属于自行验证，而非独立验证。</sub>
+
 [English](../README.md) · [한국어](README.ko.md) · [中文](README.zh.md) · [Español](README.es.md)
 
 [![check](https://github.com/w-partners/Wbrowser/actions/workflows/check.yml/badge.svg)](https://github.com/w-partners/Wbrowser/actions/workflows/check.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../LICENSE)
 ![Node](https://img.shields.io/badge/node-%E2%89%A518-brightgreen)
-![Platforms](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20WSL%20%C2%B7%20Windows-verified-success)
+![Platforms](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-independently%20verified-success)
 
 
 </div>

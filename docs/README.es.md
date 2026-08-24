@@ -9,12 +9,26 @@ que un asistente puede manejar *mientras tú miras y usas la misma ventana*.
 
 Sin claves de API. Sin integraciones. Sin volver a iniciar sesión. Cierra la ventana y se acabó.
 
+Funciona en **Windows, macOS, Linux y WSL** — cada uno medido en hardware real, en
+**otra máquina y por otra persona** distinta de quien escribió esa parte:
+
+| Plataforma | Chrome | Verificado por |
+|---|---|---|
+| Windows 10 | 151 | otra máquina y operador — incl. de extremo a extremo |
+| macOS 15 | 151 | otra máquina y operador |
+| Linux (sin pantalla) | 148 | otra máquina y operador — incl. revisión de seguridad |
+| WSL2 | 151 | mantenedor (autoverificado) |
+
+<sub>Medido el 2026-08-24. No todas las comprobaciones se hicieron en todas las
+plataformas — ver las notas de plataforma más abajo. WSL2 es el entorno del propio
+mantenedor, así que está autoverificado, no verificado de forma independiente.</sub>
+
 [English](../README.md) · [한국어](README.ko.md) · [中文](README.zh.md) · [Español](README.es.md)
 
 [![check](https://github.com/w-partners/Wbrowser/actions/workflows/check.yml/badge.svg)](https://github.com/w-partners/Wbrowser/actions/workflows/check.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../LICENSE)
 ![Node](https://img.shields.io/badge/node-%E2%89%A518-brightgreen)
-![Platforms](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20WSL%20%C2%B7%20Windows-verified-success)
+![Platforms](https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-independently%20verified-success)
 
 
 </div>
