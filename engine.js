@@ -180,24 +180,65 @@ async function pickContext(hint, strict) {
 
 async function getTab(name, accountHint, strict, agent) {
   await connect();
+  const tabName = name || 'main';
   // 🔵 Partition tabs per agent — if I overwrite a tab another agent was using,
   //    the two pieces of work tangle (agents run in parallel).
-  const key = `${agent || ''}::${accountHint || ''}::${name || 'main'}`;
+  //
+  // 🔴 The account is deliberately NOT part of the key. It used to be, and that was a bug:
+  //    `act()` only resolves an account when the command carries a URL, so `goto` produced
+  //    the key `a::work@x::main` while the very next `read` produced `a::::main`. Same tab,
+  //    two keys — the second lookup missed, opened a fresh page, and the caller found
+  //    about:blank where its page had been. Measured 2026-08-24.
+  const key = `${agent || ''}::${tabName}`;
   const existing = tabs.get(key);
   if (existing && !existing.isClosed()) return existing;
 
   const targetCtx = await pickContext(accountHint, strict);
-  // 'main' inherits an existing tab in that context. Creating a new tab pushes the
-  // screen the user was looking at into the background and leaves us wandering in a
-  // blank tab while the logged-in tab sits unused.
-  let page;
-  if ((name || 'main') === 'main') {
-    page = targetCtx.pages().find((p) => !p.isClosed() && !p.url().startsWith('chrome://'))
-        || targetCtx.pages().find((p) => !p.isClosed())
-        || await targetCtx.newPage();
-  } else {
-    page = await targetCtx.newPage();
+
+  // 🔴 The map above is memory only, so an engine restart forgets every tab it was driving —
+  //    while those tabs are still sitting open in Chrome. Without this the agent opens a
+  //    fresh tab and abandons the one holding its work. Measured 2026-08-24: after a restart
+  //    a tab named 'research' was left on a GitHub page and a blank one took its place.
+  //
+  //    So before opening anything, ask the pages themselves. stampTitle wrote the agent and
+  //    tab name into each page it drove, and that survives the engine dying.
+  for (const p of targetCtx.pages()) {
+    if (p.isClosed()) continue;
+    try {
+      // 🔴 Cap every probe. `evaluate` waits for the page to be ready, and a tab that is
+      //    mid-navigation or hung never answers — one such tab in the window and the whole
+      //    scan blocks forever. Measured 2026-08-24: the request never returned at all.
+      //    A probe that misses is fine (we just open a new tab); a probe that hangs is not.
+      const owner = await Promise.race([
+        p.evaluate(() => ({ agent: window.__wbrowserAgent, tab: window.__wbrowserTab })),
+        new Promise((res) => { setTimeout(() => res(null), 800); }),
+      ]);
+      if (owner && owner.agent === (agent || '') && owner.tab === tabName) {
+        tabs.set(key, p);
+        wireLogging(p);
+        return p;
+      }
+    } catch { /* chrome:// and cross-origin pages cannot be asked — skip them */ }
   }
+  // 🔴 Every tab an agent drives is a tab the agent opened. Including 'main'.
+  //
+  //    'main' used to inherit whatever page was already open, on the reasoning that the
+  //    agent should land on a logged-in screen instead of a blank one. That reasoning was
+  //    wrong, and the bug it caused is the one this whole design exists to prevent:
+  //    the page it inherited was usually the one the human was reading. The agent then
+  //    clicked and typed into the human's tab and relabelled its title.
+  //
+  //    Measured 2026-08-24: the human was reading Naver's newsstand; an agent issued a
+  //    plain `read` with no tab name and got that page back, retitled [agentMain].
+  //
+  //    Inheriting cannot be made safe by checking which pages are "taken", because a tab
+  //    the human opened by hand is claimed by nobody — it looks free by every test we can
+  //    run. So we stop guessing: an agent gets its own page and never adopts one.
+  //
+  // 🔵 The session is shared, so a new tab is already logged in — that was the real point
+  //    of inheriting, and opening a tab keeps it. What is lost is only that the agent
+  //    starts on about:blank instead of a page, which every caller follows with a goto.
+  const page = await targetCtx.newPage();
   tabs.set(key, page);
   wireLogging(page);       // start recording console / errors / failed requests from here on
   return page;
@@ -285,10 +326,13 @@ const titleScripted = new WeakSet();
 //    · Registering via addInitScript applies it automatically to **every subsequent
 //      navigation** as well.
 //    · Re-entrancy guard: the observer fires even while we are writing, so a flag blocks it.
-async function stampTitle(page, agent) {
-  const install = (tag) => {
+async function stampTitle(page, agent, tabName) {
+  const install = ({ tag, tab }) => {
     const KEY = '__wbrowserTitleGuard';
     window.__wbrowserAgent = tag;
+    // 🔵 The tab key lives in the page, not only in the engine's memory. The engine's map
+    //    is lost when it restarts; this is not, so the tab can be adopted back afterwards.
+    window.__wbrowserTab = tab;
     const apply = () => {
       if (window[KEY]) return;                 // we are writing right now — prevent recursion
       const want = `[${window.__wbrowserAgent}] `;
@@ -311,16 +355,17 @@ async function stampTitle(page, agent) {
     });
   };
 
+  const arg = { tag: agent, tab: tabName };
   try {
     // Apply immediately to the current page
-    await page.evaluate(install, agent);
+    await page.evaluate(install, arg);
   } catch { /* blocked on chrome:// and similar pages */ }
 
   try {
     // Also apply to every document opened from now on (register once per tab)
     if (!titleScripted.has(page)) {
       titleScripted.add(page);
-      await page.addInitScript(install, agent);
+      await page.addInitScript(install, arg);
     }
   } catch { /* even if registration fails, the immediate apply above still holds */ }
 }
@@ -386,7 +431,8 @@ async function act(cmd) {
   if (cmd.newtab) {
     const c = await pickContext(acct, explicit);
     page = await c.newPage();
-    tabs.set(`${cmd.agent || ''}::${acct || ''}::${tab}`, page);
+    // Same key shape as getTab — see the note there on why the account is not part of it.
+    tabs.set(`${cmd.agent || ''}::${tab}`, page);
     done.push('newtab');
   }
   if (cmd.goto) {
@@ -409,7 +455,7 @@ async function act(cmd) {
   //    eval/type/press would get no indicator — a tab that submitted 20 entries
   //    actually ended up with no indicator at all.
   if (cmd.agent) {
-    await stampTitle(page, cmd.agent);
+    await stampTitle(page, cmd.agent, tab);
     await showBanner(page, cmd.agent);
   }
   if (cmd.wait) { await page.waitForTimeout(Math.min(cmd.wait, 15000)); done.push(`wait ${cmd.wait}ms`); }
