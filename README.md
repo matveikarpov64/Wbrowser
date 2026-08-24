@@ -618,6 +618,36 @@ README does not claim what has not been run.)
 
 ---
 
+## Staying up to date
+
+```bash
+./wb version          # your version, and whether a newer release exists
+```
+
+```
+wbrowser 0.4.0
+🔵 A newer release is available: v0.5.0 (you have v0.4.0)
+```
+
+Updating:
+
+```bash
+git pull && npm install                                  # cloned it
+git pull https://github.com/w-partners/Wbrowser main     # forked it
+```
+
+🔵 A fork does not follow this repo — GitHub never pushes our commits to your copy.
+That second command is how you pull them in when you want them.
+
+🔴 If the check can't reach GitHub it says so. It will not tell you that you are up
+to date when it simply failed to ask. Skip the network call entirely with
+`WBROWSER_NO_UPDATE_CHECK=1`; it never blocks the command either way.
+
+To hear about releases without running anything, use **Watch → Releases only** on
+the [repository page](https://github.com/w-partners/Wbrowser).
+
+---
+
 ## Contributing & security
 
 - [CHANGELOG.md](CHANGELOG.md) — what changed in each release, and what is still unverified

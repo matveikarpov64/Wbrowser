@@ -513,6 +513,35 @@ systemctl --user status wbrowser
 
 ---
 
+## 保持最新
+
+```bash
+./wb version          # 你的版本，以及是否有新发布
+```
+
+```
+wbrowser 0.4.0
+🔵 A newer release is available: v0.5.0 (you have v0.4.0)
+```
+
+更新：
+
+```bash
+git pull && npm install                                  # clone 的情况
+git pull https://github.com/w-partners/Wbrowser main     # fork 的情况
+```
+
+🔵 **fork 不会自动跟随本仓库** —— GitHub 不会把我们的提交推送到你的副本。
+上面第二条命令就是你想要时把它们拉过来的方式。
+
+🔴 如果连不上 GitHub，它会**明说连不上**，绝不会把「没问成」说成「已是最新」。
+想完全跳过网络检查：`WBROWSER_NO_UPDATE_CHECK=1` —— 两种情况下都不会阻塞命令。
+
+不想运行任何命令也能收到消息：在[仓库页面](https://github.com/w-partners/Wbrowser)
+选择 **Watch → Releases only**。
+
+---
+
 ## 参与贡献 · 安全
 
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — 塑造这份代码的规则，以及如何测试

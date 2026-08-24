@@ -7,12 +7,44 @@ has the detail.
 
 ## Unreleased
 
+---
+
+## 0.4.0 — 2026-08-24
+
+**You can now tell which version you have, and whether a newer one exists.**
+
+### Added
+- `./wb version` (also `--version`, `-v`) — prints your version and checks GitHub
+  for a newer release. Until now a clone had no way to answer either question, so
+  nobody downstream could know an update existed.
+  - 🔴 A failed lookup says *"could not reach GitHub"*, never *"up to date"*.
+    Offline and current are different facts and are reported differently.
+  - Skip the network check with `WBROWSER_NO_UPDATE_CHECK=1`. It never blocks the
+    command and never changes its exit status.
+  - Tells forks how to pull upstream, since a fork does not follow this repo.
+- `scripts/install-hooks.sh` + `scripts/pre-commit` — the pre-commit guard now
+  ships as a normal file you can install. It only ever lived in `.git/hooks`,
+  which git does not clone, so CONTRIBUTING told people to install something the
+  repo did not contain. Installing is explicit: it never touches `core.hooksPath`,
+  is not wired into `npm install`, and refuses to overwrite an existing hook.
+
+### Fixed
+- `.gitignore` allow-list had no entry for `/scripts/`, so new source files there
+  were silently ignored — the opposite of what an allow-list is for.
+
 ### Documentation
 - Says plainly what the arrangement is: nothing is copied. The profile holds
   cookies; your data stays on the provider's servers, and the agent reaches it the
   way your phone does. Both halves are stated — no stale copy and no second store
   to secure, but also no sandbox: when the agent opens your mail, it is your mail,
   with exactly your access. All four languages.
+- Verification tables now say the same thing in both places, and WSL2 is marked
+  maintainer self-verified in all four languages — the badge previously flattened
+  that distinction by covering it with a single "verified".
+- The zh and es editions gained the intro verification table they were missing;
+  those readers could not previously see who had checked what.
+- Records that headless was confirmed from process arguments, and why the
+  User-Agent cannot answer that question.
 
 ---
 

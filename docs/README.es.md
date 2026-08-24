@@ -547,6 +547,36 @@ máquina real, y este README no afirma lo que no se ha ejecutado.)
 
 ---
 
+## Mantenerse al día
+
+```bash
+./wb version          # tu versión, y si existe una versión más reciente
+```
+
+```
+wbrowser 0.4.0
+🔵 A newer release is available: v0.5.0 (you have v0.4.0)
+```
+
+Actualizar:
+
+```bash
+git pull && npm install                                  # si lo clonaste
+git pull https://github.com/w-partners/Wbrowser main     # si hiciste un fork
+```
+
+🔵 **Un fork no sigue a este repositorio**: GitHub nunca envía nuestros commits a tu
+copia. El segundo comando es cómo los traes cuando quieras.
+
+🔴 Si no puede llegar a GitHub, **lo dice**. Nunca te dirá que estás al día cuando
+en realidad no pudo preguntar. Para omitir la comprobación de red por completo:
+`WBROWSER_NO_UPDATE_CHECK=1` — en ningún caso bloquea el comando.
+
+Para enterarte sin ejecutar nada, usa **Watch → Releases only** en la
+[página del repositorio](https://github.com/w-partners/Wbrowser).
+
+---
+
 ## Contribuir · seguridad
 
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — las reglas que dieron forma a este código y cómo probarlo

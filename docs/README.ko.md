@@ -573,6 +573,36 @@ systemctl --user status wbrowser
 
 ---
 
+## 최신 상태 유지
+
+```bash
+./wb version          # 내 버전과, 새 릴리스가 있는지
+```
+
+```
+wbrowser 0.4.0
+🔵 A newer release is available: v0.5.0 (you have v0.4.0)
+```
+
+업데이트:
+
+```bash
+git pull && npm install                                  # clone 한 경우
+git pull https://github.com/w-partners/Wbrowser main     # fork 한 경우
+```
+
+🔵 **fork 는 이 저장소를 자동으로 따라오지 않습니다.** GitHub 이 우리 커밋을 여러분의
+사본으로 밀어주지 않기 때문입니다. 위 두 번째 명령이 원할 때 가져오는 방법입니다.
+
+🔴 GitHub 에 못 닿으면 **못 닿았다고 말합니다.** 물어보지 못한 것을 "최신입니다"라고
+하지 않습니다. 네트워크 확인을 아예 건너뛰려면 `WBROWSER_NO_UPDATE_CHECK=1` —
+어느 쪽이든 명령을 막지 않습니다.
+
+아무것도 실행하지 않고 소식을 받으려면 [저장소 페이지](https://github.com/w-partners/Wbrowser)에서
+**Watch → Releases only** 를 켜두면 됩니다.
+
+---
+
 ## 기여하기 · 보안
 
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — 이 코드를 만든 규칙과 시험 방법

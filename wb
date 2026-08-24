@@ -126,6 +126,39 @@ case "$cmd" in
     fi
     echo "✅ Ready"
     ;;
+  version|--version|-v)
+    # Local version comes from package.json — the one file that is always present.
+    LOCAL=$(python3 -c "import json;print(json.load(open('$DIR/package.json'))['version'])" 2>/dev/null || echo "unknown")
+    echo "wbrowser $LOCAL"
+
+    # 🔵 The check is opt-out, not opt-in, but it never blocks and never fails the
+    #    command: no network, rate-limited, or offline all just print nothing extra.
+    #    WBROWSER_NO_UPDATE_CHECK=1 skips it entirely.
+    [ -n "${WBROWSER_NO_UPDATE_CHECK:-}" ] && exit 0
+
+    LATEST=$(curl -fsS --max-time 4 \
+      https://api.github.com/repos/w-partners/Wbrowser/releases/latest 2>/dev/null \
+      | python3 -c "import json,sys;print(json.load(sys.stdin).get('tag_name',''))" 2>/dev/null || true)
+
+    # 🔴 An empty answer means "could not ask", NOT "you are up to date".
+    #    Saying "up to date" on a failed lookup is the silent failure this project
+    #    keeps guarding against — so say which one actually happened.
+    if [ -z "$LATEST" ]; then
+      echo "· Could not reach GitHub to check for updates (offline or rate-limited)."
+      echo "  Check by hand: https://github.com/w-partners/Wbrowser/releases"
+      exit 0
+    fi
+
+    if [ "v$LOCAL" = "$LATEST" ]; then
+      echo "· Up to date (latest release is $LATEST)"
+    else
+      echo ""
+      echo "🔵 A newer release is available: $LATEST (you have v$LOCAL)"
+      echo "   What changed:  https://github.com/w-partners/Wbrowser/blob/main/CHANGELOG.md"
+      echo "   Update:        git pull && npm install"
+      echo "   Forked it?     git pull https://github.com/w-partners/Wbrowser main"
+    fi
+    ;;
   status)
     # 🔵 Don't judge with tasklist/netstat — under mirrored WSL all three fail to see
     #    Chrome while CDP responds fine (measured 2026-08-23).
