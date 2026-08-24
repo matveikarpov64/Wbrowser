@@ -56,12 +56,32 @@ explains *why* it didn't work is the other half.
 
 ## Platform notes for contributors
 
-Verified on macOS, native Linux and WSL2. Windows-native is implemented but has not
-been measured — if you run it there, a report either way is genuinely useful.
+Verified on macOS, native Linux (including headless), Windows native and WSL2 —
+each on a different machine by a different person, except WSL2 which is the
+maintainer's own.
 
 If you touch platform detection (`chromeCandidates()`, `isWSL()`, `stateDir()`),
 please say which OS you actually ran it on. "Should work" and "does work" are
 different claims, and this project has been bitten by the gap.
+
+### `setup.sh` uses ASCII only (0x00–0x7F)
+
+**Write only ASCII there.** CP949, EUC-KR and UTF-8 all share that range byte for
+byte, so ASCII renders identically on every console there is — no list of things to
+avoid, and nothing to re-check per locale.
+
+```bash
+LC_ALL=C grep -n '[^ -~	]' setup.sh     # must print nothing (printable ASCII + tab)
+```
+
+Why it matters: a Korean Windows console runs in CP949, and a check mark has no CP949
+representation at all — `iconv` refuses to encode it. The output becomes question
+marks, and a garbled installer reads as a failed install. So `[ok]` and `[!!]` rather
+than symbols, `--` rather than an em dash.
+
+The rest of the project is UTF-8 and that is fine — it is read by editors, not by
+cmd.exe. This applies to `setup.sh` because it is the one file that prints to a
+console we do not control.
 
 ## Pull requests
 

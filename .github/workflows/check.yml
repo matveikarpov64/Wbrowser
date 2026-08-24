@@ -61,6 +61,22 @@ jobs:
           fi
           echo "no credential patterns found"
 
+      - name: setup.sh is pure ASCII
+        shell: bash
+        run: |
+          # 🔴 A Korean Windows console is CP949, where a check mark has no
+          #    representation at all — the output becomes question marks and a garbled
+          #    installer reads as a failed install. CP949 shares 0x00-0x7F with ASCII,
+          #    so ASCII-only output cannot break on any console.
+          #    Measured 2026-08-24: iconv refuses to encode ✅ into CP949 outright.
+          # 🔵 No grep -P here. It is GNU-only and silently no-ops on the macOS runner's
+          #    BSD grep, which would turn this guard off exactly where nobody looks.
+          #    Printable ASCII plus tab — a tab is legal and must not be flagged.
+          if LC_ALL=C grep -n '[^ -~	]' setup.sh; then
+            echo "::error::setup.sh must be pure ASCII (lines above are not)"; exit 1
+          fi
+          echo "ascii-only"
+
       - name: JavaScript syntax
         run: |
           node --check engine.js
