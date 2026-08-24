@@ -32,7 +32,34 @@ jobs:
           if [ -n "$junk" ]; then
             echo "::error::These should not be tracked:"; echo "$junk"; exit 1
           fi
+          # 🔴 Private-by-accident, not junk. This repo is developed inside a larger
+          #    harness, so the agent workspace and local tool config sit right next to
+          #    the source. `git add -A` once was all it would have taken.
+          #    Job files are here too: a job names the sites you automate and the
+          #    selectors you click — that is the user's routine, not example code.
+          # 🔵 Plain -E only. `grep -P` is GNU-only and fails silently on macOS BSD
+          #    grep, which would turn this guard into a no-op on the mac runner.
+          private=$(git ls-files | grep -E '^AGENT/|^\.claude/|^\.mcp\.json$|^scratchpad/' || true)
+          jobs_extra=$(git ls-files jobs/ | grep -v '^jobs/example-' || true)
+          if [ -n "$private$jobs_extra" ]; then
+            echo "::error::These are local-only and must never be published:"
+            echo "$private"; echo "$jobs_extra"; exit 1
+          fi
           echo "clean"
+
+      - name: No credentials in tracked files
+        shell: bash
+        run: |
+          # 🔴 The check above finds files that shouldn't exist. This one finds
+          #    secrets inside files that should. Different failure, different check.
+          #    Cookies are the real risk here: a cookie IS the login.
+          hits=$(git grep -nIE \
+            "(sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----)" \
+            -- . ':!*.md' || true)
+          if [ -n "$hits" ]; then
+            echo "::error::Possible credential in a tracked file:"; echo "$hits"; exit 1
+          fi
+          echo "no credential patterns found"
 
       - name: JavaScript syntax
         run: |

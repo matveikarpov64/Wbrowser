@@ -10,8 +10,23 @@ runtime.json
 # Logs (they contain visited URLs)
 *.log
 
-# Local job definitions
-jobs/*.local.json
+# Local job definitions.
+# 🔴 Allow-list, not deny-list: a job file names the sites you automate and the
+#    selectors you click. That is your routine, so the default is "not published".
+#    Only the shipped examples are tracked.
+jobs/*
+!jobs/example-*.json
+
+# Secrets and local tool config
+.env
+.env.*
+!.env.example
+.claude/
+.mcp.json
+
+# Scratch space
+scratchpad/
+tmp/
 
 node_modules/
 package-lock.json
@@ -20,3 +35,6 @@ package-lock.json
 # Python bytecode — leaked into the first commit before this line existed
 __pycache__/
 *.py[cod]
+
+# Harness agent workspace — never publish
+AGENT/
