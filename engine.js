@@ -178,6 +178,17 @@ async function pickContext(hint, strict) {
   return ctx || all[0];
 }
 
+// Title of a page, capped. 🔴 `page.title()` waits for a ready document, so one tab that is
+//    mid-navigation would otherwise stall the whole tab listing. A missing title is fine.
+async function titleOf(page) {
+  try {
+    return await Promise.race([
+      page.title(),
+      new Promise((res) => { setTimeout(() => res(''), 800); }),
+    ]);
+  } catch { return ''; }
+}
+
 async function getTab(name, accountHint, strict, agent) {
   await connect();
   const tabName = name || 'main';
@@ -628,11 +639,69 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === 'GET' && req.url === '/tabs') {
       await connect();
-      const list = ctx.pages().filter((p) => !p.isClosed())
-        .map((p) => ({ url: p.url() }));
+      // 🔵 Number the tabs. The number is what you hand to /take — it is how a person
+      //    points at the screen they were on and says "carry on from here".
+      const pages = ctx.pages().filter((p) => !p.isClosed());
+      const driven = new Map();
+      for (const [k, p] of tabs.entries()) if (!p.isClosed()) driven.set(p, k);
+      const list = await Promise.all(pages.map(async (p, i) => ({
+        n: i + 1,
+        url: p.url(),
+        title: await titleOf(p),
+        drivenBy: driven.get(p) || null,   // null = nobody is driving it, i.e. it is yours
+      })));
       const named = [...tabs.entries()].filter(([, p]) => !p.isClosed())
         .map(([name, p]) => ({ name, url: p.url() }));
       return res.end(JSON.stringify({ open: list, named }, null, 2));
+    }
+    if (req.method === 'POST' && req.url === '/take') {
+      // Hand a tab you are on over to an agent, by its number from /tabs.
+      //
+      // 🔴 Only ever takes the tab that was named. Agents must not adopt a page on their
+      //    own — see the note in getTab. This endpoint is the one exception, and it exists
+      //    because the person asked for it explicitly.
+      const body = JSON.parse((await readBody(req)) || '{}');
+      await connect();
+      const pages = ctx.pages().filter((p) => !p.isClosed());
+      const idx = Number(body.n);
+      if (!Number.isInteger(idx) || idx < 1 || idx > pages.length) {
+        res.statusCode = 400;
+        return res.end(JSON.stringify({
+          error: `No tab ${body.n}. Run ./wb tabs — there are ${pages.length}.`,
+        }, null, 2));
+      }
+      const page = pages[idx - 1];
+      const agent = body.agent || '';
+      const tabName = body.tab || 'main';
+      tabs.set(`${agent}::${tabName}`, page);
+      wireLogging(page);
+      await stampTitle(page, agent, tabName);
+      return res.end(JSON.stringify({
+        taken: { n: idx, url: page.url(), title: await titleOf(page) },
+        as: { agent, tab: tabName },
+      }, null, 2));
+    }
+    if (req.method === 'POST' && req.url === '/release') {
+      // Give the tab back. The agent stops driving it; the tab itself is left alone.
+      const body = JSON.parse((await readBody(req)) || '{}');
+      const key = `${body.agent || ''}::${body.tab || 'main'}`;
+      const page = tabs.get(key);
+      if (!page) {
+        res.statusCode = 404;
+        return res.end(JSON.stringify({ error: `Nothing held as '${key}'.` }, null, 2));
+      }
+      tabs.delete(key);
+      // 🔵 Drop the label too, so the tab bar stops claiming an agent is on it.
+      try {
+        await page.evaluate(() => {
+          if (window.__wbrowserTitleObs) { window.__wbrowserTitleObs.disconnect(); }
+          delete window.__wbrowserTitleObs;
+          delete window.__wbrowserAgent;
+          delete window.__wbrowserTab;
+          document.title = (document.title || '').replace(/^\[[^\]]*\]\s*/, '');
+        });
+      } catch { /* the page may be gone or unreachable — the handle is released either way */ }
+      return res.end(JSON.stringify({ released: key, url: page.isClosed() ? null : page.url() }, null, 2));
     }
     if (req.method === 'POST' && req.url === '/act') {
       const cmd = JSON.parse((await readBody(req)) || '{}');

@@ -9,7 +9,9 @@
 #   ./wb type <selector> <text>
 #   ./wb press <key>     Enter, Tab, Escape ...
 #   ./wb shot [path]     screenshot (default /tmp/win-shot.png)
-#   ./wb tabs            tab list
+#   ./wb tabs            numbered tab list — who is driving each one
+#   ./wb take <#>        hand a tab you are on to the agent, so it carries on from there
+#   ./wb release         give that tab back
 #   ./wb down            take down the engine only (Chrome belongs to the user, so we don't touch it)
 #
 # 🔴 This script never kills Chrome. It may be a window the user was using.
@@ -127,30 +129,67 @@ case "$cmd" in
   go|read|click|type|press|console|errors|network|eval)
           _post "$(_json "$cmd" "$@")" | _pretty ;;
   tabs)
-    # Show tabs grouped by agent. The [name] marker in the title is the discriminator.
-    python3 - "$CDP" <<'PY'
-import json, re, sys, urllib.request
-cdp = sys.argv[1]
-try:
-    tabs = json.load(urllib.request.urlopen(cdp + "/json", timeout=5))
-except Exception:
-    print("❌ Browser is not running — ./wb up"); sys.exit(1)
-groups = {}
+    # 🔴 The engine is the single source of the numbering. This used to read Chrome's
+    #    /json directly and number the tabs itself, while the engine numbered them again
+    #    from its own page list — so `./wb take 3` could mean a different tab than the 3
+    #    you just read here. One counter, one place.
+    _engine_up || { echo "❌ Engine is not running — ./wb up"; exit 1; }
+    curl -s --max-time 30 "$ENGINE/tabs" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+tabs = d.get('open') or []
+if not tabs:
+    print('No open tabs.'); sys.exit(0)
+print('  #  driven by      title                                   url')
 for t in tabs:
-    if t.get("type") != "page":
-        continue
-    title = t.get("title") or "(untitled)"
-    m = re.match(r"^\[([^\]]+)\]\s*(.*)$", title)
-    who = m.group(1) if m else "(no agent marker)"
-    groups.setdefault(who, []).append((m.group(2) if m else title, t.get("url") or ""))
-if not groups:
-    print("No open tabs."); sys.exit(0)
-for who in sorted(groups, key=lambda k: (k.startswith("("), k)):
-    print(f"■ {who}  ({len(groups[who])} tabs)")
-    for title, url in groups[who]:
-        print(f"    {title[:45]:<47} {url[:45]}")
-    print()
-PY
+    who = t.get('drivenBy') or '— (yours)'
+    title = (t.get('title') or '(untitled)')
+    print(f\"  {t['n']:<2} {who[:13]:<14} {title[:38]:<40} {(t.get('url') or '')[:40]}\")
+print()
+print('  ./wb take <#>   hand that tab to the agent')
+print('  ./wb release    give it back')
+"
+    ;;
+  take)
+    # Hand the tab you are looking at to the agent, by its number from ./wb tabs.
+    # 🔴 Check it is a number here, not just in the engine. An unquoted value goes straight
+    #    into the JSON body and breaks the request with a parse error that says nothing about
+    #    what the user actually typed.
+    case "${1:-}" in
+      ''|*[!0-9]*) echo "Usage: ./wb take <#> [tab-name]   — <#> is a number from ./wb tabs"; exit 1 ;;
+    esac
+    _engine_up || { echo "❌ Engine is not running — ./wb up"; exit 1; }
+    # 🔴 Refuse rather than take a tab under an empty name. An unnamed hold cannot be told
+    #    apart from anyone else's, and ./wb release would not know what to give back.
+    [ -n "$AGENT_NAME" ] || {
+      echo "❌ Cannot tell which agent this is, so the tab would be held under no name."
+      echo "   Run from an agent directory (.../AGENT/<name>) or set WIN_AGENT=<name>."
+      exit 1
+    }
+    curl -s --max-time 30 -X POST "$ENGINE/take" -H 'Content-Type: application/json' \
+      -d "{\"n\": $1, \"agent\": \"$AGENT_NAME\", \"tab\": \"${2:-main}\"}" \
+      | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+if d.get('error'):
+    print('❌', d['error']); sys.exit(1)
+t = d['taken']
+print(f\"✅ Took tab {t['n']}: {t.get('title') or ''}\")
+print(f\"   {t.get('url') or ''}\")
+print(f\"   The agent carries on from here. ./wb release gives it back.\")
+"
+    ;;
+  release)
+    _engine_up || { echo "❌ Engine is not running — ./wb up"; exit 1; }
+    curl -s --max-time 30 -X POST "$ENGINE/release" -H 'Content-Type: application/json' \
+      -d "{\"agent\": \"$AGENT_NAME\", \"tab\": \"${1:-main}\"}" \
+      | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+if d.get('error'):
+    print('❌', d['error']); sys.exit(1)
+print(f\"✅ Released — the tab is yours again: {d.get('url') or ''}\")
+"
     ;;
   logins)
     # What are we logged into (by cookie domain). We never look at the values.

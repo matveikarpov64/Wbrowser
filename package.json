@@ -1,6 +1,6 @@
 {
   "name": "wbrowser",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Drive your real, already-logged-in Chrome from the terminal or any MCP client",
   "type": "commonjs",
   "bin": {

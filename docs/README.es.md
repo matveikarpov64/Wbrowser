@@ -157,7 +157,9 @@ la ventana nueva y desde entonces se mantienen.
 ./wb console [regex]       registros de consola + excepciones no capturadas
 ./wb network               peticiones fallidas (4xx/5xx, CORS, timeouts)
 ./wb shot [archivo.png]    captura de pantalla
-./wb tabs                  pestañas abiertas, agrupadas por agente
+./wb tabs                  pestañas numeradas — y quién conduce cada una
+./wb take <n>              entrega al agente la pestaña que tienes delante
+./wb release               recupérala
 ./wb close                 cierra solo las pestañas que tú abriste
 ./wb status                ¿todo funcionando? ¿qué perfil?
 ./wb show                  trae la ventana del navegador al frente
@@ -268,6 +270,42 @@ agentes se distinguen de un vistazo.
 El prefijo de la pestaña **sobrevive a la navegación** — un `MutationObserver` lo vuelve
 a aplicar cada vez que la página reescribe su propio título (algo que las SPA hacen
 constantemente).
+
+---
+
+## Entregar una pestaña a mitad de tarea
+
+Llevas tres páginas: filtraste una lista, rellenaste medio formulario, te metiste en
+un panel. Quedan otros veinte minutos y preferirías no hacerlos. Señala esa pestaña
+y deja que el agente siga:
+
+```bash
+./wb tabs
+  #  driven by      title                                url
+  1  — (yours)      Reservas — marzo                     https://…/bookings?from=03-01
+  2  — (yours)      Factura 4417                         https://…/invoices/4417
+  3  my-agent       [my-agent] GitHub                    https://github.com/…
+
+./wb take 1          # el agente retoma la pestaña 1 justo donde la dejaste
+./wb release         # la recuperas
+```
+
+Sin volver a entrar, sin rehacer la navegación, sin explicar lo que ya hiciste:
+el agente recibe la página **en el estado que construiste**.
+
+🔴 **Un agente nunca toma una pestaña por su cuenta.** Abre las suyas y solo conduce
+esas; el único modo de que toque la tuya es que se la entregues por número. No es una
+política, es cómo funciona la búsqueda: un agente no tiene forma de nombrar una página
+que no abrió.
+
+> Antes de 0.2.0 no era así. La pestaña por defecto del agente adoptaba la página que
+> ya estuviera abierta, que solía ser la que *tú* estabas leyendo — y a partir de ahí
+> hacía clic y escribía en tu pestaña, y le cambiaba el título. Comprobar qué pestañas
+> parecen "libres" no lo arregla: una pestaña que abriste a mano no la reclama nadie y
+> parece libre en cualquier comprobación. Por eso se eliminó la adopción.
+
+`./wb release` también quita la etiqueta `[agente]`, para que la barra de pestañas deje
+de indicar que alguien conduce una pestaña que ya es tuya otra vez.
 
 ---
 

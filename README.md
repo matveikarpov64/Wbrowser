@@ -10,6 +10,9 @@ company's internal tool. Everything useful is behind a sign-in it doesn't have.
 Wbrowser gives it a seat at **your own Chrome** — the one you're already signed into.
 Same window, same tabs. You watch each click land and can take the mouse back mid-task.
 
+And it goes the other way: get halfway through something tedious, then hand that
+exact tab over — `./wb take 2` — and the agent carries on from the page you built.
+
 **Your password never leaves you.** You log in by hand; Chrome keeps it; Wbrowser only
 drives the window that's already open.
 
@@ -201,7 +204,9 @@ window, and they persist there from then on.
 ./wb console [regex]       console logs + uncaught exceptions
 ./wb network               failed requests (4xx/5xx, CORS, timeouts)
 ./wb shot [file.png]       screenshot
-./wb tabs                  open tabs, grouped by agent
+./wb tabs                  numbered tab list — and who is driving each one
+./wb take <#>              hand a tab you are on to the agent
+./wb release               take that tab back
 ./wb close                 close only the tabs you opened
 ./wb status                is everything up? which profile?
 ./wb show                  bring the browser window to the front
@@ -337,6 +342,42 @@ distinguishable at a glance.
 
 The tab prefix survives navigation — a `MutationObserver` re-applies it whenever
 the page rewrites its own title (which SPAs do constantly).
+
+---
+
+## Hand a tab over mid-task
+
+You are three pages into something — filtered a list, filled half a form, dug
+into a dashboard. It is going to take another twenty minutes and you would
+rather not do it. Point the agent at that tab and let it carry on:
+
+```bash
+./wb tabs
+  #  driven by      title                                url
+  1  — (yours)      Bookings — March                     https://…/bookings?from=03-01
+  2  — (yours)      Invoice 4417                         https://…/invoices/4417
+  3  my-agent       [my-agent] GitHub                    https://github.com/…
+
+./wb take 1          # the agent picks up tab 1, exactly where you left it
+./wb release         # you take it back
+```
+
+No re-login, no re-navigating, no explaining what you already did — the agent
+gets the page in the state you built.
+
+**An agent never takes a tab on its own.** It opens its own tabs and drives only
+those; the only way it touches yours is if you hand it over by number. That is
+not a policy, it is how the lookup works — an agent has no way to name a page it
+did not open.
+
+> This was not true before 0.2.0. The agent's default tab used to adopt whatever
+> page was already open, which was usually the one *you* were reading — it would
+> then click and type into your tab and relabel its title. Checking which tabs
+> look "unused" cannot fix that: a tab you opened by hand is claimed by nobody
+> and looks free by every test. So adoption was removed outright.
+
+`./wb release` also strips the `[agent]` label, so the tab bar stops claiming
+someone is driving a tab that is yours again.
 
 ---
 

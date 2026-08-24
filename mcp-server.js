@@ -250,7 +250,9 @@ async function runTool(name, a) {
 
 function buildServer() {
   const server = new Server(
-    { name: 'wbrowser', version: '0.1.0' },
+    // 🔴 One version, in package.json. It used to be written here too, and two copies of a
+    //    version number drift the moment someone bumps one of them.
+    { name: 'wbrowser', version: require('./package.json').version },
     { capabilities: { tools: {} } },
   );
   server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: TOOLS }));
