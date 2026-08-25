@@ -57,6 +57,27 @@ def profile_of(cdp):
     if v.get("userDataDir"):          # if this version does give it, use it as-is
         return browser, v["userDataDir"]
 
+    # 🔴 Ask ourselves before asking Chrome. launch.js knows the profile for certain —
+    #    it passed it on the command line — and writes it to runtime.json. Reading that
+    #    back is free and exact, while the fallback below opens a tab and scrapes a page.
+    #
+    #    Measured 2026-08-25: status printed "Profile unknown" for hours while
+    #    runtime.json sat there holding the answer, and someone reasonably concluded the
+    #    agent might be driving the wrong Chrome. The value existed; nothing read it.
+    #
+    #    🔵 Only trust it if it describes *this* Chrome — a stale file from a previous
+    #    run would be worse than saying nothing, so the CDP port has to match.
+    try:
+        state = os.path.join(
+            os.environ.get("XDG_STATE_HOME") or os.path.expanduser("~/.local/state"),
+            "wbrowser", "runtime.json")
+        with open(state, encoding="utf-8") as fh:
+            rt = json.load(fh)
+        if rt.get("profileDir") and str(rt.get("cdpPort")) == str(cdp.rsplit(":", 1)[-1]):
+            return browser, rt["profileDir"]
+    except Exception:
+        pass                          # no state file, or it is not about this Chrome
+
     # Read chrome://version through the engine
     import re
     engine = os.environ.get("WBROWSER_ENGINE", "http://127.0.0.1:7981")
