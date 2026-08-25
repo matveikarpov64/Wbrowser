@@ -67,10 +67,15 @@ async function connect() {
         reachable = r.ok;
       } catch { /* leave it false */ }
       if (reachable) {
+        // 🔴 Say "do not retry" out loud. Retrying is the obvious thing to do, and here
+        //    it is the wrong thing: every attempt leaves another world behind, so the
+        //    act of checking makes the problem worse. Measured 2026-08-25: 723 -> 911
+        //    in twenty minutes, almost entirely from two people diagnosing it.
         throw new Error(
           'Cannot attach to Chrome, but Chrome is answering — this is almost always '
           + 'stale playwright contexts left by an engine that did not exit cleanly. '
           + 'They only clear when Chrome restarts: close Chrome fully and run "wb up". '
+          + 'Do not keep retrying — each attempt leaves another one behind. '
           + `(original: ${e.message.split('\n')[0]})`,
         );
       }
@@ -627,7 +632,8 @@ const server = http.createServer(async (req, res) => {
           browser: false,         // we could not attach
           cdp: CDP,
           hint: stale
-            ? 'Chrome is answering but cannot be attached to — close Chrome fully and run "wb up".'
+            ? 'Chrome is answering but cannot be attached to — close Chrome fully and run "wb up". '
+              + 'Do not keep retrying: each attempt makes it worse.'
             : 'The browser is not running — start it with node launch.js.',
           detail: e.message.split('\n')[0],
         }, null, 2));
