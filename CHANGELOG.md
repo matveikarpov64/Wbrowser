@@ -7,6 +7,25 @@ has the detail.
 
 ## Unreleased
 
+### Fixed
+- **The tab label could not be turned off by accident.** `wb` derives the agent name
+  from the working directory (`.../AGENT/<name>`), and when it could not find one it
+  returned an empty string — on the reasoning that no name is better than a made-up
+  one. The effect was the opposite of safe: the `[agent] ` title prefix and the
+  "in control" banner simply did not appear, with no warning, while the automation
+  worked normally. So the one feature that tells a human an agent is driving their
+  window was off, silently, and nothing said so.
+
+  Measured 2026-08-25: running `./wb go` from the repository root — which is what a
+  fresh clone does — produced a plain `Google` title and no banner. It now falls back
+  to `agent@<user>`. A generic name still makes the true claim: something automated is
+  driving this tab.
+- **`wb tabs` no longer truncates the owner column.** It cut names to 13 characters,
+  so `wbrowser-primary::main` printed as `wbrowser-prim`, and an unnamed agent printed
+  as `::main` — which reads as though the tab belongs to nobody. This column exists to
+  answer "whose tab is this"; a cut name answers it wrongly rather than not at all.
+  The column is now sized to the data.
+
 ---
 
 ## 0.4.1 — 2026-08-25

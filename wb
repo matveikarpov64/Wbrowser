@@ -68,7 +68,15 @@ _agent_name() {
   case "$PARENT_CWD" in
     */AGENT/*|*/agents/*) echo "$PARENT_CWD" | sed -E 's#.*/(AGENT|agents)/([^/]+).*#\2#'; return ;;
   esac
-  echo ""   # 🔴 If we can't determine it, empty — we don't attach a bogus name
+  # 🔴 Last resort: name it after the host user, never empty.
+  #    An empty name used to be returned here on the reasoning that a bogus name is worse
+  #    than none. It is not: the label is the whole point of driving a window the human can
+  #    see, and an empty name turns it off **silently**. Measured 2026-08-25: running from
+  #    the repo root instead of AGENT/<name> produced a plain `Google` title with no banner,
+  #    no warning, and the automation working fine — so nothing tells you the one safety
+  #    feature is off. Running from the repo root is what a fresh clone does by default.
+  #    A generic name still says "an agent is driving this", which is the claim that matters.
+  echo "agent@$(id -un 2>/dev/null || echo unknown)"
 }
 AGENT_NAME="$(_agent_name)"
 
@@ -185,11 +193,15 @@ d = json.load(sys.stdin)
 tabs = d.get('open') or []
 if not tabs:
     print('No open tabs.'); sys.exit(0)
-print('  #  driven by      title                                   url')
-for t in tabs:
-    who = t.get('drivenBy') or '— (yours)'
-    title = (t.get('title') or '(untitled)')
-    print(f\"  {t['n']:<2} {who[:13]:<14} {title[:38]:<40} {(t.get('url') or '')[:40]}\")
+# 🔴 Never truncate the owner. This column exists to answer 'whose tab is this',
+#    and a cut name answers it wrongly rather than not at all — measured 2026-08-25:
+#    'wbrowser-primary::main' printed as 'wbrowser-prim' and an agent named '' printed
+#    as '::main', which reads as though nobody owns it. Size the column to the data.
+rows = [((t.get('drivenBy') or '— (yours)'), (t.get('title') or '(untitled)'), t) for t in tabs]
+w = max(len(r[0]) for r in rows)
+print(f\"  #  {'driven by':<{w}}  {'title':<38}  url\")
+for who, title, t in rows:
+    print(f\"  {t['n']:<2} {who:<{w}}  {title[:38]:<38}  {(t.get('url') or '')[:40]}\")
 print()
 print('  ./wb take <#>   hand that tab to the agent')
 print('  ./wb release    give it back')

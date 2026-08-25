@@ -436,6 +436,41 @@ distinguishable at a glance.
 The tab prefix survives navigation — a `MutationObserver` re-applies it whenever
 the page rewrites its own title (which SPAs do constantly).
 
+🔵 **The label is never silently absent.** The agent name normally comes from the
+working directory (`.../AGENT/<name>`); when that yields nothing — running from the
+repo root, for instance — it falls back to `agent@<user>` rather than an empty name.
+An unnamed agent would have produced a bare title and no banner, which looks exactly
+like no agent being present. Set it explicitly with `WIN_AGENT=<name>`.
+
+### Several agents, several tabs, at once
+
+Each agent drives **its own tab**, keyed by `<agent>::<tab>`:
+
+```bash
+./wb go https://example.com                 # this agent's 'main' tab
+WIN_AGENT=other ./wb go https://news.site   # a different agent, its own tab
+```
+
+```
+./wb tabs
+  #  driven by               title
+  1  — (yours)               your own tab, untouched
+  2  wbrowser-primary::main  [wbrowser-primary] Example Domain
+  3  other::main             [other] News
+```
+
+Running another command as the same agent **reuses that tab** rather than opening a
+second one, so an agent keeps working in one place instead of scattering pages behind
+you. Agents never share a tab, so two working at once do not tangle — and neither
+touches the tabs you opened yourself.
+
+🔵 `main` is currently the only tab an agent drives directly; the `<agent>::<tab>`
+key already supports more, and `./wb take <#> [tab-name]` uses it when you hand over
+a second page. Driving several named tabs per agent from the CLI is not wired up yet.
+
+🔵 If the engine restarts it re-adopts its tabs by asking the pages who owns them,
+so work in progress is not abandoned in a tab nobody is watching.
+
 ---
 
 ## Hand a tab over mid-task
@@ -573,7 +608,8 @@ This tool drives a browser that holds **all your logins**. Treat it accordingly.
 | `WBROWSER_PROFILE` | `Default` | Profile name within it |
 | `WBROWSER_CDP_PORT` | `9222` | Chrome debugging port |
 | `WBROWSER_PORT` | `7981` | Control engine port |
-| `WBROWSER_AGENT` | auto | Name shown in banner and tab |
+| `WIN_AGENT` | derived | Name shown in banner and tab title |
+| `WIN_TAB` | `main` | Which of that agent's tabs to drive |
 | `WBROWSER_MCP_TOKEN` | — | **Required** for remote MCP |
 | `WBROWSER_NOTES` | — | Directory for daily work logs (optional) |
 
