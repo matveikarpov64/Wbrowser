@@ -7,6 +7,22 @@ has the detail.
 
 ## Unreleased
 
+### Fixed
+- **`wb shot` photographed the wrong tab.** It sent a bare `{"shot":true}` instead of
+  going through the command builder, so no agent name was attached — and the engine
+  resolves an empty agent to a *different* tab, the one owned by the unnamed agent.
+  The result was a screenshot of a blank page while every other command in the same
+  session worked correctly.
+
+  Measured 2026-08-25: 4,742 bytes of white where the real page was 253,713. Nothing
+  reported an error — the file was written, the command said `Saved:`, and the image
+  looked plausible until opened. Found while testing whether screenshots could be
+  strung together into a demo GIF.
+- **`wb show` had the same defect**, which mattered more: it exists to raise the
+  agent's window when you cannot tell which Chrome is which, and without the agent name
+  it would touch whichever tab the unnamed agent owned — pointing at the wrong window
+  while claiming to point at the right one.
+
 ---
 
 ## 0.4.3 — 2026-08-25
