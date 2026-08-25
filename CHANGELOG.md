@@ -7,6 +7,12 @@ has the detail.
 
 ## Unreleased
 
+---
+
+## 0.5.0 — 2026-08-25
+
+**Types like a person, and tells you what it actually did.**
+
 ### Changed
 - 🔴 **`wb type` types, instead of setting the value.** The default was `page.fill`,
   which drops the whole string in at once — something no person does, in a tool whose
