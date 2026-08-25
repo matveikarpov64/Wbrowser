@@ -172,6 +172,27 @@ case "$cmd" in
     #    Chrome while CDP responds fine (measured 2026-08-23).
     _cdp_up    && echo "✅ Chrome (CDP $CDP)" || echo "❌ Chrome — ./wb up"
     _engine_up && echo "✅ Engine ($ENGINE)"  || echo "❌ Engine — ./wb up"
+    # 🔴 Show what the engine says is wrong, not just that something is.
+    #    /health returns a hint naming the actual cause; status used to grep for "ok"
+    #    and throw the rest away. Measured 2026-08-25: someone read this output dozens
+    #    of times while the engine was reporting "Chrome is answering but cannot be
+    #    attached to" — and went looking outside the tool, because status never said it.
+    if _engine_up; then :; else
+      # 🔴 Give this longer than the liveness probe above. Working out *why* we cannot
+      #    attach means letting connect() reach its own 10s timeout first — a 3s budget
+      #    here cuts the answer off and prints nothing, which is the silence we are fixing.
+      echo "   (checking why...)" >&2
+      curl -s --max-time 20 "$ENGINE/health" 2>/dev/null | python3 -c "
+import json, sys
+try:
+    d = json.load(sys.stdin)
+except Exception:
+    sys.exit(0)
+if not d.get('browser'):
+    if d.get('hint'):   print('   ' + d['hint'])
+    if d.get('detail'): print('   detail: ' + d['detail'][:150])
+" 2>/dev/null
+    fi
     # 🔴 Don't stop at "attached" — whether it's a logged-in window or an empty one is the real issue.
     _cdp_up && WBROWSER_ENGINE="$ENGINE" python3 "$DIR/whoami.py" "$CDP"
     ;;

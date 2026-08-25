@@ -45,7 +45,38 @@ const tabs = new Map();          // name -> page
 // on a dead handle.
 async function connect() {
   if (browser && browser.isConnected()) return;
-  browser = await chromium.connectOverCDP(CDP, { timeout: 10000 });
+  try {
+    browser = await chromium.connectOverCDP(CDP, { timeout: 10000 });
+  } catch (e) {
+    // 🔴 A connect timeout here usually is not a dead Chrome. Say what it actually is,
+    //    because the raw message sends people to restart a browser that is working fine.
+    //
+    //    Every unclean engine exit leaves one playwright "utility world" per frame
+    //    inside Chrome (see the shutdown handler at the bottom). They accumulate, and
+    //    each one replays an executionContextCreated event on the next connect, so
+    //    attaching gets slower until it cannot finish. Measured 2026-08-25: 723 stale
+    //    worlds, connect impossible, while a raw CDP command still answered in 7ms.
+    //
+    //    Only restarting Chrome clears them — the worlds live in its memory. Playwright
+    //    will not report them, so if we do not name it here nobody can find it: every
+    //    other check (HTTP, websocket, /json/list, Chrome's own "Responding") passes.
+    if (/Timeout .* exceeded/i.test(e.message || '')) {
+      let reachable = false;
+      try {
+        const r = await fetch(`${CDP}/json/version`, { signal: AbortSignal.timeout(2000) });
+        reachable = r.ok;
+      } catch { /* leave it false */ }
+      if (reachable) {
+        throw new Error(
+          'Cannot attach to Chrome, but Chrome is answering — this is almost always '
+          + 'stale playwright contexts left by an engine that did not exit cleanly. '
+          + 'They only clear when Chrome restarts: close Chrome fully and run "wb up". '
+          + `(original: ${e.message.split('\n')[0]})`,
+        );
+      }
+    }
+    throw e;
+  }
   ctx = browser.contexts()[0];
   if (!ctx) throw new Error('CDP has no context — Chrome is in a bad state.');
   tabs.clear();
@@ -447,8 +478,36 @@ async function act(cmd) {
     done.push('newtab');
   }
   if (cmd.goto) {
-    await page.goto(cmd.goto, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    done.push(`goto ${cmd.goto}`);
+    // 🔴 A goto timeout does not mean the page failed to load. Heavy SPAs keep requests
+    //    in flight long past the point where the page is usable, and Playwright rejects
+    //    on the clock even though the document is there and interactive.
+    //    Measured 2026-08-25: x.com/compose/post timed out at 30s every time, while
+    //    navigating via location.href and waiting landed on a complete, working page —
+    //    so the command reported failure for something that had actually worked.
+    //    Rejecting here also threw away the rest of the command (click, type, read).
+    //
+    //    So: on timeout, ask the page where it actually is. If it reached the target
+    //    origin and the document is parsed, carry on and say the wait was cut short.
+    //    Any other failure — DNS, refused, cert — still throws, because those really
+    //    did fail and pretending otherwise would be the silent success we avoid.
+    try {
+      await page.goto(cmd.goto, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      done.push(`goto ${cmd.goto}`);
+    } catch (e) {
+      if (!/Timeout .* exceeded/i.test(e.message || '')) throw e;
+      const landed = await Promise.race([
+        page.evaluate(() => ({ href: location.href, ready: document.readyState })),
+        new Promise((res) => { setTimeout(() => res(null), 3000); }),
+      ]).catch(() => null);
+      const sameOrigin = landed && (() => {
+        try { return new URL(landed.href).origin === new URL(cmd.goto).origin; } catch { return false; }
+      })();
+      if (sameOrigin && landed.ready !== 'loading') {
+        done.push(`goto ${cmd.goto} (still loading after 30s; page is usable)`);
+      } else {
+        throw e;
+      }
+    }
   }
   if (cmd.click) { await page.click(cmd.click, { timeout: 10000 }); done.push(`click ${cmd.click}`); }
   if (cmd.type) {
@@ -556,11 +615,20 @@ const server = http.createServer(async (req, res) => {
           ok: true, browser: true, cdp: CDP, openTabs: v.length,
         }, null, 2));
       } catch (e) {
+        // 🔴 Do not always say "the browser is not running". When Chrome is answering
+        //    but we still cannot attach, that sentence sends people to start a browser
+        //    that is already up, and the real cause goes unnamed. connect() distinguishes
+        //    the two; carry its wording through instead of overwriting it.
+        //    Measured 2026-08-25: the generic hint was on screen dozens of times while
+        //    the actual problem was stale playwright contexts, and it never pointed there.
+        const stale = /stale playwright contexts/i.test(e.message || '');
         return res.end(JSON.stringify({
           ok: true,               // the engine is alive
-          browser: false,         // the browser is not there yet
+          browser: false,         // we could not attach
           cdp: CDP,
-          hint: 'The browser is not running — start it with node launch.js.',
+          hint: stale
+            ? 'Chrome is answering but cannot be attached to — close Chrome fully and run "wb up".'
+            : 'The browser is not running — start it with node launch.js.',
           detail: e.message.split('\n')[0],
         }, null, 2));
       }
@@ -721,3 +789,35 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, '127.0.0.1', () => {
   console.log(`WBROWSER_ENGINE_UP http://127.0.0.1:${PORT}  → cdp ${CDP}`);
 });
+
+// 🔴 Let go of the browser on the way out, or the next connect gets slower forever.
+//
+//    Playwright creates an isolated "utility world" per frame when it attaches over CDP,
+//    and only removes them when the connection closes cleanly. Kill the engine instead
+//    (crash, kill -9, reboot) and every one of those worlds stays inside Chrome. They
+//    cost nothing while sitting there, but the *next* connect receives one
+//    executionContextCreated event for each — so connect time grows with every unclean
+//    exit until it exceeds the timeout and the browser is effectively unusable.
+//
+//    Measured 2026-08-25: after a handful of kill -9 during development, 723 stale
+//    worlds had accumulated and connectOverCDP could not finish inside 25s. Chrome
+//    itself was fine — a raw CDP command answered in 7ms — which is what makes this
+//    so hard to diagnose from the symptom: every layer looks healthy except the one
+//    doing the counting.
+//
+//    Only Chrome exiting clears them, so the fix has to be here: close the connection
+//    on the way out. See also the stale-world check in connect().
+let closing = false;
+async function shutdown(sig) {
+  if (closing) return;
+  closing = true;
+  try {
+    if (browser && browser.isConnected()) await browser.close();
+  } catch { /* going away regardless — never block exit on cleanup */ }
+  process.exit(sig === 'SIGINT' ? 130 : 0);
+}
+for (const sig of ['SIGTERM', 'SIGINT', 'SIGHUP']) {
+  process.on(sig, () => { shutdown(sig); });
+}
+// 🔵 beforeExit covers a normal end-of-work exit; 'exit' itself is too late to await.
+process.on('beforeExit', () => { shutdown('beforeExit'); });
