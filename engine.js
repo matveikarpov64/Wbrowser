@@ -71,11 +71,15 @@ async function connect() {
         //    it is the wrong thing: every attempt leaves another world behind, so the
         //    act of checking makes the problem worse. Measured 2026-08-25: 723 -> 911
         //    in twenty minutes, almost entirely from two people diagnosing it.
+        // 🔵 Action first, explanation after. Someone hitting this is mid-task and will
+        //    read one line before deciding what to do — and the obvious decision (retry)
+        //    is the harmful one. Put the stop and the fix where they cannot be missed.
         throw new Error(
-          'Cannot attach to Chrome, but Chrome is answering — this is almost always '
-          + 'stale playwright contexts left by an engine that did not exit cleanly. '
-          + 'They only clear when Chrome restarts: close Chrome fully and run "wb up". '
-          + 'Do not keep retrying — each attempt leaves another one behind. '
+          'Do not retry — restart Chrome. Close Chrome fully and run "wb up". '
+          + 'Chrome is answering but cannot be attached to: an engine that did not exit '
+          + 'cleanly left stale playwright contexts behind, and every further attempt '
+          + 'leaves more, so retrying moves this further from working. Only a Chrome '
+          + 'restart clears them. '
           + `(original: ${e.message.split('\n')[0]})`,
         );
       }
@@ -632,8 +636,8 @@ const server = http.createServer(async (req, res) => {
           browser: false,         // we could not attach
           cdp: CDP,
           hint: stale
-            ? 'Chrome is answering but cannot be attached to — close Chrome fully and run "wb up". '
-              + 'Do not keep retrying: each attempt makes it worse.'
+            ? 'Do not retry — close Chrome fully and run "wb up". Chrome answers but '
+              + 'cannot be attached to, and each further attempt makes it worse.'
             : 'The browser is not running — start it with node launch.js.',
           detail: e.message.split('\n')[0],
         }, null, 2));
