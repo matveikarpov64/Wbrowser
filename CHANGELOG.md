@@ -9,6 +9,43 @@ has the detail.
 
 ---
 
+## 0.4.3 — 2026-08-25
+
+**Every dial read normal while the tool would not work. Fixed the leak, and made the
+tool say what is wrong.**
+
+### Fixed
+- **The engine no longer leaks playwright contexts on the way out.** Playwright creates
+  an isolated "utility world" per frame when it attaches over CDP and removes them only
+  on a clean close. There was no shutdown handler, so every crash, kill or reboot left a
+  full set inside Chrome. They are harmless sitting there — but the *next* connect
+  receives one event per world, so attach time grows with each unclean exit until it
+  exceeds the timeout and the browser cannot be driven at all.
+
+  Measured: 723 stale worlds after a run of `kill -9` during development, and
+  `connectOverCDP` could not finish in 25s. What made it expensive to find is that
+  everything else looked healthy — Chrome reported `Responding=true`, `/json/version`
+  and `/json/list` answered instantly, the websocket handshake completed in 2ms, and a
+  raw CDP command came back in 7ms. Only a count was wrong, and nothing counted it.
+- **Connect failures now say which failure it is.** "Chrome is not running" and "Chrome
+  answers but will not attach" need different responses, and the second one is the case
+  where retrying actively makes things worse. Both messages lead with the instruction —
+  *do not retry, restart Chrome* — because someone hitting this is mid-task and reads
+  one line before deciding. Measured: 723 → 911 stale worlds in twenty minutes, almost
+  entirely from two people diagnosing the same failure.
+- **`wb status` prints the engine's diagnosis.** It grepped `/health` for `"ok"` and
+  discarded the rest, so the engine was reporting the real cause while status showed a
+  bare `❌ Engine`. Someone read that output dozens of times and went looking outside
+  the tool, because the tool appeared to have nothing to say.
+- **`wb status` knows which profile it is driving.** `launch.js` records the profile in
+  `runtime.json`; `whoami` never read it, so when Chrome 151 declined to report
+  `userDataDir` over CDP the status line said `Profile unknown`. The answer was on disk
+  the whole time — and `unknown` reads as a finding rather than a gap, which is worse
+  than silence: it prompted a reasonable worry that the agent might be driving a
+  personal Chrome. Guarded on the CDP port matching so a stale file is ignored.
+
+---
+
 ## 0.4.2 — 2026-08-25
 
 **A clone now gets everything: the tool, the instructions, and a label that cannot
