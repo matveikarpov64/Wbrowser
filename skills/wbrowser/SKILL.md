@@ -50,21 +50,23 @@ buttons(3): Search, Sign in, Settings
 Use what it printed. Guessing `input[name=q]` for a search box has failed here — the
 element was a `textarea`, and `read` had said so.
 
-## Forms that ignore `.value`
+## Forms
 
-React and similar frameworks ignore direct assignment. Use the native setter:
+`wb type` sends **real keystrokes**, so React and similar frameworks see the same events
+they would from a person. No native-setter trick is needed — just type.
 
 ```bash
-wb eval '
-var set = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,"value").set;
-set.call(el, "value");
-el.dispatchEvent(new Event("input",{bubbles:true}));
-el.dispatchEvent(new Event("change",{bubbles:true}));
-'
+wb type '<selector>' 'the text'
+wb type --fast '<selector>' 'long text'   # sets the value in one go
 ```
 
-🔵 If that still fails, `wb type` sends **real keystrokes**. That is the most reliable
-path — prefer it over fighting the framework.
+🔴 **Do not reach for `--fast` by default.** It sets the value in one shot, which any
+site that re-renders while you type will partly swallow — measured on X's composer: a
+92-character string with a link arrived as 55, losing everything before the URL, and the
+command still reported success. Use it only for long text in a plain, quiet field.
+
+🔵 **Check what landed.** `wb read` now prints each field's current contents
+(`= 'text'` or `(empty)`), so verifying is one command, not a hand-written `eval`.
 
 ## 🔴 Before anything irreversible
 

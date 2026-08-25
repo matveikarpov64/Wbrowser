@@ -25,7 +25,18 @@ def build(argv):
         return {"click": rest[0], "wait": 1200, "read": True}
     if op == "type":
         # Preserve spaces in the text as-is — join all the remaining arguments.
-        return {"type": {"selector": rest[0], "text": " ".join(rest[1:])}}
+        # 🔵 --fast sets the value in one shot instead of typing it. Quicker on long text
+        #    in a plain field, but it is not what a person does, and sites that re-render
+        #    while you type will drop part of it. Opt-in for that reason.
+        args = list(rest)
+        fast = False
+        if "--fast" in args:
+            args.remove("--fast")
+            fast = True
+        cmd = {"type": {"selector": args[0], "text": " ".join(args[1:])}}
+        if fast:
+            cmd["type"]["fast"] = True
+        return cmd
     if op == "press":
         return {"press": rest[0], "wait": 1800, "read": True}
     if op == "shot":

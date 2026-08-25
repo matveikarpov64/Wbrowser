@@ -310,13 +310,35 @@ async function summarize(page) {
     const buttons = [...document.querySelectorAll('button, input[type=submit], [role=button]')]
       .filter(vis).slice(0, 15)
       .map((b) => txt(b.innerText || b.value)).filter(Boolean);
-    const inputs = [...document.querySelectorAll('input, textarea, select')]
+    // 🔴 contenteditable counts as an input. Rich composers — X, Slack, Notion, most
+    //    comment boxes — are divs, so a list of input/textarea/select shows the page as
+    //    having nowhere to type. Measured 2026-08-25: X's composer never appeared here,
+    //    and the agent went hunting for a selector that `read` should have handed it.
+    //
+    //    🔴 And report what each field currently holds. Without it there is no way to
+    //    check that typing landed except to evaluate against the element yourself — and
+    //    picking the wrong element is exactly the mistake this is meant to prevent.
+    const editable = [...document.querySelectorAll('[contenteditable=""], [contenteditable=true]')]
+      // 🔵 Skip the aria-hidden duplicate: rich editors mount a second, inert copy of the
+      //    field with the same attributes. It is empty, it is *not* what the user sees,
+      //    and reading it reports an empty box while the real one holds text.
+      .filter((n) => !n.closest('[aria-hidden=true]'));
+    const inputs = [...document.querySelectorAll('input, textarea, select'), ...editable]
       .filter(vis).slice(0, 15)
-      .map((i) => ({
-        tag: i.tagName.toLowerCase(), type: i.type || '', name: i.name || '',
-        id: i.id || '', placeholder: i.placeholder || '',
-      }))
-      .filter((x) => x.name || x.id || x.placeholder);
+      .map((i) => {
+        const isEditable = i.isContentEditable;
+        const val = isEditable ? (i.innerText || '') : (i.value || '');
+        return {
+          tag: isEditable ? 'editable' : i.tagName.toLowerCase(),
+          type: i.type || '', name: i.name || '',
+          id: i.id || '',
+          placeholder: i.placeholder || i.getAttribute('aria-label')
+            || i.getAttribute('data-testid') || '',
+          value: val.length > 80 ? `${val.slice(0, 80)}…` : val,
+          length: val.length,
+        };
+      })
+      .filter((x) => x.name || x.id || x.placeholder || x.tag === 'editable');
     // 🔴 Never return document.cookie (session-hijacking vector).
     return {
       title: document.title,
@@ -518,13 +540,78 @@ async function act(cmd) {
       }
     }
   }
-  if (cmd.click) { await page.click(cmd.click, { timeout: 10000 }); done.push(`click ${cmd.click}`); }
-  if (cmd.type) {
-    await page.fill(cmd.type.selector, cmd.type.text, { timeout: 10000 });
-    // 🔵 Never log what was typed — it may be a password.
-    done.push(`type -> ${cmd.type.selector}`);
+  if (cmd.click) {
+    // 🔴 Say what was actually clicked, not what was asked for. A selector that matches
+    //    the wrong element still "succeeds", and the caller carries on believing the
+    //    cursor is somewhere it is not. Measured 2026-08-25: someone aimed at a composer,
+    //    hit the search box, and typed a character into the middle of a URL — the log
+    //    said `click <selector>` either way.
+    const el = page.locator(cmd.click).first();
+    // 🔵 Bring it into view first. A person scrolls to what they are clicking; playwright
+    //    will too, but only within its own timeout — doing it as a separate step means a
+    //    long page does not eat the click budget and fail on something perfectly usable.
+    await el.scrollIntoViewIfNeeded({ timeout: 10000 });
+    await el.click({ timeout: 10000 });
+    let what = cmd.click;
+    try {
+      const d = await Promise.race([
+        el.evaluate((n) => {
+          const label = n.getAttribute('aria-label') || n.getAttribute('data-testid')
+            || n.getAttribute('placeholder') || n.getAttribute('name') || '';
+          const text = (n.innerText || n.value || '').trim().slice(0, 40);
+          return `${n.tagName.toLowerCase()}${label ? ` [${label}]` : ''}${text ? ` "${text}"` : ''}`;
+        }),
+        new Promise((res) => { setTimeout(() => res(null), 2000); }),
+      ]);
+      if (d) what = `${cmd.click} -> ${d}`;
+    } catch { /* describing it is a nicety; the click already happened */ }
+    done.push(`click ${what}`);
   }
-  if (cmd.press) { await page.keyboard.press(cmd.press); done.push(`press ${cmd.press}`); }
+  if (cmd.type) {
+    // 🔴 Type like a person by default: focus the field, then send real keystrokes.
+    //
+    //    This used to be page.fill, which sets the value in one shot — something no
+    //    human does, in a tool whose whole point is driving a browser the way a person
+    //    would. It breaks on any site that re-renders while you type. Measured
+    //    2026-08-25 on X's composer: the same 92-character string arrived complete
+    //    without a link, and truncated to 55 with one, losing everything before the URL
+    //    as the site rebuilt the field around a link preview. The command reported
+    //    success both times.
+    //
+    //    🔵 fill is still available as {"fast": true} for large text in stable fields,
+    //    where keystroke-by-keystroke is slow and nothing is listening. It is opt-in on
+    //    purpose: a fast default that quietly drops text is worse than a slow one.
+    const { selector, text, fast, delay } = cmd.type;
+    if (fast) {
+      await page.fill(selector, text, { timeout: 10000 });
+    } else {
+      const field = page.locator(selector).first();
+      // 🔴 Scroll it into view and focus it — do not click. A field below the fold is
+      //    perfectly typeable but not clickable, and click() then times out on something
+      //    that was never broken. Measured 2026-08-25: an input at y=972 in an 805px
+      //    viewport failed this way.
+      await field.scrollIntoViewIfNeeded({ timeout: 10000 });
+      await field.focus({ timeout: 10000 });
+      // 🔵 Clear what is there first — fill's one useful habit, which typing lacks.
+      //    Skip it for contenteditable, where selectAll+delete is the working idiom.
+      try {
+        await field.fill('', { timeout: 3000 });
+      } catch { /* contenteditable and friends refuse fill; carry on and append */ }
+      await field.pressSequentially(text, { delay: Number(delay) || 25, timeout: 30000 });
+    }
+    // 🔵 Never log what was typed — it may be a password.
+    done.push(`type -> ${selector}${fast ? ' (fast)' : ''}`);
+  }
+  if (cmd.press) {
+    // 🔴 Accept Control+a as well as Control+A. Playwright wants the exact key name, so
+    //    a lowercase letter in a chord silently presses something else — measured
+    //    2026-08-25: `Control+a` did not select all, and the Backspace after it deleted
+    //    a single character instead of the field.
+    const keys = String(cmd.press).split('+');
+    const norm = keys.map((k, i) => (i === keys.length - 1 && k.length === 1 ? k.toUpperCase() : k)).join('+');
+    await page.keyboard.press(norm);
+    done.push(`press ${norm}`);
+  }
 
   // 🔵 Make it visible who is in control.
   //    ① tab title    — tells them apart in the tab bar

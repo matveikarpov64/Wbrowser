@@ -302,7 +302,8 @@ window, and they persist there from then on.
 ./wb go <url>              open a page, return its structure
 ./wb read                  summarize the current page
 ./wb click <selector>      click an element
-./wb type <selector> <text>   fill an input
+./wb type <selector> <text>   type into a field, one keystroke at a time
+./wb type --fast <sel> <text> set the value in one go (see below)
 ./wb press <key>           Enter, Tab, Escape, ArrowDown…
 ./wb eval '<js>'           run JavaScript in the page
 ./wb console [regex]       console logs + uncaught exceptions
@@ -387,9 +388,11 @@ skill/prompt around Wbrowser, put them in it:
    before clicking caught it; clicking first would have created 9 broken records.
 3. **Count as you repeat.** Sending 8 Enter presses in a row produced 40 rows — the
    page handled them faster than expected. Press once, count, stop at the target.
-4. **`eval` beats `type` for framework forms; `type` beats `eval` when that fails.**
-   React ignores direct `value` assignment — use the native setter plus input/change
-   events. If it still doesn't take, `browser_type` sends real keystrokes.
+4. **Just use `type`.** It sends real keystrokes, so React and friends see the same
+   events they would from a person and no native-setter trick is needed. This used to
+   be the other way round — `type` set the value in one shot, which framework forms
+   swallowed — and the workaround was `eval` with a native setter. That is no longer
+   necessary. Reach for `--fast` only when the text is long and the field is plain.
 5. **Check what you're attached to.** `browser_status` tells you whether the window
    actually holds logins. An empty profile answers every command successfully while
    doing nothing useful.

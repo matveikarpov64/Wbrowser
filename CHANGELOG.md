@@ -7,7 +7,38 @@ has the detail.
 
 ## Unreleased
 
+### Changed
+- 🔴 **`wb type` types, instead of setting the value.** The default was `page.fill`,
+  which drops the whole string in at once — something no person does, in a tool whose
+  premise is driving a browser the way a person would. It breaks on any site that
+  re-renders as you type: measured 2026-08-25 on X's composer, the same 92-character
+  string arrived complete without a link and **truncated to 55 with one**, losing
+  everything before the URL as the site rebuilt the field around a link preview. The
+  command reported success both times, so the text went out cut short.
+  - `--fast` still uses `fill` for long text in stable fields. It is opt-in on purpose:
+    a fast default that quietly drops characters is worse than a slower one that does not.
+
 ### Added
+- **`wb read` reports contenteditable fields, and what each field currently holds.**
+  Rich composers — X, Slack, Notion, most comment boxes — are `div`s, so a page full of
+  places to type showed `inputs(0)` and the agent went hunting for a selector `read`
+  should have handed it. Values are shown too (`= 'text'`, or `(empty)`), because
+  "did my typing land?" was previously unanswerable from this output.
+  - 🔴 The `aria-hidden` duplicate that rich editors mount alongside the real field is
+    skipped. Reading it returns an empty box while the visible one holds text — someone
+    spent an afternoon on that, believing they had cleared a field they had not.
+
+### Fixed
+- **`wb press` accepts `Control+a`.** Playwright wants the exact key name, so a
+  lowercase letter in a chord pressed something else entirely — select-all did nothing
+  and the following Backspace deleted one character instead of the field.
+- **`wb click` says what it actually clicked** (`click #x -> textarea [Search] "..."`).
+  A selector matching the wrong element still succeeds, and the caller carries on with
+  the cursor somewhere it is not — measured: aiming at a composer, hitting the search
+  box, and typing a character into the middle of a URL.
+- **`wb click` and `wb type` scroll to the target first.** A field below the fold is
+  perfectly typeable but not clickable, and the command timed out on something that was
+  never broken.
 - **A demo GIF in the README**, and `scripts/make-demo.sh` to regenerate it. The tool
   had no picture of itself working, which is a poor showing for something whose whole
   claim is that you can *see* the agent driving.

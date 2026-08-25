@@ -102,7 +102,18 @@ def main():
         print("  inputs(%d):" % len(inputs))
         for x in inputs[:8]:
             hint = x.get("placeholder") or x.get("type") or ""
-            print("    - %s  (%s)" % (sel_of(x), hint))
+            # 🔴 Show what the field currently holds. The engine reports it; printing only
+            #    the selector meant the one question you ask after typing — "did it land?"
+            #    — could not be answered from this output, so people evaluated against the
+            #    element themselves and picked the wrong one. Measured 2026-08-25.
+            val = x.get("value")
+            n = x.get("length")
+            if val:
+                print("    - %s  (%s)  = %r" % (sel_of(x), hint, val))
+            elif n == 0:
+                print("    - %s  (%s)  = (empty)" % (sel_of(x), hint))
+            else:
+                print("    - %s  (%s)" % (sel_of(x), hint))
 
     return 0
 
