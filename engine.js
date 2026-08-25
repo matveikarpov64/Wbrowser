@@ -76,10 +76,10 @@ async function connect() {
         //    is the harmful one. Put the stop and the fix where they cannot be missed.
         throw new Error(
           'Do not retry — restart Chrome. Close Chrome fully and run "wb up". '
-          + 'Chrome is answering but cannot be attached to: an engine that did not exit '
-          + 'cleanly left stale playwright contexts behind, and every further attempt '
-          + 'leaves more, so retrying moves this further from working. Only a Chrome '
-          + 'restart clears them. '
+          + 'Chrome is answering but cannot be attached to: playwright contexts from '
+          + 'earlier connections have built up, and Chrome holds them until it exits. '
+          + 'Every further attempt adds more, so retrying moves this further from '
+          + 'working. Only a Chrome restart clears them. '
           + `(original: ${e.message.split('\n')[0]})`,
         );
       }
@@ -800,14 +800,20 @@ server.listen(PORT, '127.0.0.1', () => {
   console.log(`WBROWSER_ENGINE_UP http://127.0.0.1:${PORT}  → cdp ${CDP}`);
 });
 
-// 🔴 Let go of the browser on the way out, or the next connect gets slower forever.
+// 🔴 Let go of the browser on the way out.
 //
-//    Playwright creates an isolated "utility world" per frame when it attaches over CDP,
-//    and only removes them when the connection closes cleanly. Kill the engine instead
-//    (crash, kill -9, reboot) and every one of those worlds stays inside Chrome. They
-//    cost nothing while sitting there, but the *next* connect receives one
-//    executionContextCreated event for each — so connect time grows with every unclean
-//    exit until it exceeds the timeout and the browser is effectively unusable.
+//    Playwright creates an isolated "utility world" per frame when it attaches over CDP.
+//    🔴 Chrome keeps those for the life of the browser: measured 2026-08-25, close()
+//    does NOT remove them, so every fresh connectOverCDP leaves one per open tab behind
+//    however it ends. They cost nothing sitting there, but the *next* connect receives
+//    one executionContextCreated event for each — connect time grows with every
+//    reconnect until it exceeds the timeout and the browser is effectively unusable.
+//
+//    🔵 So this handler is not the cure it first looks like. Normal operation attaches
+//    once and reuses it (verified: running wb commands leaves the count flat), so the
+//    cost lands on engine *restarts* — and closing cleanly does not reduce it. What this
+//    does buy: Chrome stops treating us as an attached client the moment we exit, rather
+//    than holding that state until it notices the socket died.
 //
 //    Measured 2026-08-25: after a handful of kill -9 during development, 723 stale
 //    worlds had accumulated and connectOverCDP could not finish inside 25s. Chrome

@@ -15,12 +15,19 @@ has the detail.
 tool say what is wrong.**
 
 ### Fixed
-- **The engine no longer leaks playwright contexts on the way out.** Playwright creates
-  an isolated "utility world" per frame when it attaches over CDP and removes them only
-  on a clean close. There was no shutdown handler, so every crash, kill or reboot left a
-  full set inside Chrome. They are harmless sitting there — but the *next* connect
-  receives one event per world, so attach time grows with each unclean exit until it
-  exceeds the timeout and the browser cannot be driven at all.
+- **The engine closes its browser connection on the way out.** Playwright creates an
+  isolated "utility world" per frame when it attaches over CDP, and **Chrome keeps them
+  for the life of the browser** — measured 2026-08-25: `browser.close()` does not remove
+  them, so each fresh `connectOverCDP` leaves one per open tab behind regardless of how
+  it ends. They are harmless sitting there, but the *next* connect receives one event per
+  world, so attach time grows with every reconnect until it exceeds the timeout and the
+  browser cannot be driven at all.
+
+  🔵 Normal use does not reconnect: the engine attaches once and reuses it, verified by
+  running `wb` commands and watching the count stay flat. The cost lands on **restarts** —
+  and the shutdown handler does not prevent that, it only stops the engine holding a
+  connection open when it should not. Restart the engine often enough and the browser
+  still degrades, which is why the diagnostic below matters more than the handler.
 
   Measured: 723 stale worlds after a run of `kill -9` during development, and
   `connectOverCDP` could not finish in 25s. What made it expensive to find is that
