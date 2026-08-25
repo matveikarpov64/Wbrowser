@@ -7,6 +7,26 @@ has the detail.
 
 ## Unreleased
 
+### Added
+- **The agent skill ships with the tool** — `skills/wbrowser/SKILL.md`, copied to
+  `~/.claude/skills/wbrowser/` by `setup.sh`. Until now the binary landed on your PATH
+  and nothing told your assistant the tool existed, so a fresh clone had `wb` available
+  and no idea when to use it, how to find selectors, or what it must never do (type a
+  password, print a cookie, close your Chrome). Installing a tool without its
+  instructions is half an install.
+  - Setup will not overwrite a `SKILL.md` you edited; it writes `SKILL.md.new` and says so.
+
+### Changed
+- **`setup.sh` now registers the systemd user service itself** on Linux and WSL,
+  instead of printing a suggestion to run `./install.sh` afterwards. A step people have
+  to read about at the end is a step most people skip — and the symptom shows up much
+  later, as "Engine is not running" in some other session after a reboot.
+  - Where systemd is unavailable (common on WSL) it says so and tells you to run
+    `wb up` after a reboot, rather than failing quietly or claiming success.
+- `setup.sh` gained a `warn` helper. Three of the new steps can legitimately not run,
+  and each one now prints why. A step that silently skips looks exactly like one that
+  worked.
+
 ### Fixed
 - **The tab label could not be turned off by accident.** `wb` derives the agent name
   from the working directory (`.../AGENT/<name>`), and when it could not find one it

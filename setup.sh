@@ -20,6 +20,9 @@ BIN="$HOME/.local/bin"
 say()  { printf '\n\033[1m%s\033[0m\n' "$*"; }
 ok()   { printf '  [ok] %s\n' "$*"; }
 info() { printf '  -  %s\n' "$*"; }
+# !! Something did not happen, but the install can still finish. Must be visible:
+#    a step that quietly skips looks identical to one that worked.
+warn() { printf '  [!] %s\n' "$*" >&2; }
 die()  { printf '\n  [!!] %s\n\n' "$*" >&2; exit 1; }
 
 # -- 0. Which machine is this -------------------------------------------------
@@ -197,6 +200,48 @@ case ":$PATH:" in
     info "open a new terminal, or run:  export PATH=\"\$HOME/.local/bin:\$PATH\""
     ;;
 esac
+
+# -- 4b. Teach the agent how to use it ----------------------------------------
+# !! Without this the tool is installed and nothing knows it exists. `wb` on the PATH
+#    only helps a human who already knows the commands; an agent needs to be told when
+#    to reach for it, how, and what never to do (passwords, cookie values, closing the
+#    human's Chrome). Shipping the binary without the instructions is half an install.
+say "Installing the agent skill"
+SKILL_SRC="$DEST/skills/wbrowser/SKILL.md"
+SKILL_DIR="$HOME/.claude/skills/wbrowser"
+if [ -f "$SKILL_SRC" ]; then
+  mkdir -p "$SKILL_DIR"
+  if [ -e "$SKILL_DIR/SKILL.md" ] && ! cmp -s "$SKILL_SRC" "$SKILL_DIR/SKILL.md"; then
+    # !! Never clobber a skill they wrote or edited. Put the new one alongside and say so.
+    cp "$SKILL_SRC" "$SKILL_DIR/SKILL.md.new"
+    warn "you already have a different $SKILL_DIR/SKILL.md"
+    info "left the new one at SKILL.md.new -- compare with: diff $SKILL_DIR/SKILL.md{,.new}"
+  else
+    cp "$SKILL_SRC" "$SKILL_DIR/SKILL.md"
+    ok "$SKILL_DIR/SKILL.md"
+  fi
+else
+  warn "skill file missing from this copy -- agents will not know how to drive the browser"
+fi
+
+# -- 4c. Keep the engine running across reboots -------------------------------
+# !! The engine already survives the terminal that started it, but not a reboot. Without
+#    this, the first session after a restart meets "Engine is not running" and has to
+#    know to run `wb up`. Registering the unit is part of installing, not an extra step
+#    to read about at the end -- this used to be a printed suggestion and was skipped.
+if [ "$PLATFORM" = "linux" ] || [ "$PLATFORM" = "wsl" ]; then
+  say "Starting the engine with your session"
+  if command -v systemctl >/dev/null 2>&1 && systemctl --user show-environment >/dev/null 2>&1; then
+    if (cd "$DEST" && ./install.sh >/dev/null 2>&1); then
+      ok "systemd user service registered"
+    else
+      warn "could not register the service -- run 'wb up' after a reboot"
+    fi
+  else
+    # !! WSL without systemd is common. Say what to do instead of failing quietly.
+    info "no systemd here -- run 'wb up' after a reboot (or enable systemd in /etc/wsl.conf)"
+  fi
+fi
 
 # -- 5. Start it ------------------------------------------------------------
 say "Starting Chrome"

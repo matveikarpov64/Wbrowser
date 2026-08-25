@@ -193,9 +193,14 @@ see [Security](#security) for the full threat model.
 curl -fsSL https://raw.githubusercontent.com/w-partners/Wbrowser/main/setup.sh | bash
 ```
 
-It checks what you have, clones, installs, puts `wb` on your PATH and opens the
-browser window. Then you log into your sites in that window — by hand, as usual —
-and that is the whole setup.
+It checks what you have, clones, installs, puts `wb` on your PATH, installs the agent
+skill so your assistant knows the tool exists, registers the engine to start with your
+session (Linux/WSL with systemd), and opens the browser window. Then you log into your
+sites in that window — by hand, as usual — and that is the whole setup.
+
+🔵 Each of those is done, not suggested. A step that cannot run says so on screen
+rather than skipping quietly — on WSL without systemd, for instance, it tells you to
+run `wb up` after a reboot instead of pretending the service was registered.
 
 <details>
 <summary><b>Windows, natively (PowerShell — no WSL)</b></summary>
@@ -664,6 +669,29 @@ README does not claim what has not been run.)
 - **Chrome/Chromium only.** Firefox has no CDP.
 - **One CDP port = one Chrome process.** Profiles opened from within that window are
   visible; a separately-launched Chrome is not.
+
+---
+
+## Using it from an AI assistant
+
+Installing the binary is only half of it — your assistant also has to know the tool
+exists, when to reach for it, and what it must never do. `setup.sh` copies a skill
+file to `~/.claude/skills/wbrowser/SKILL.md` for that reason.
+
+```bash
+# if you installed by hand, or want to refresh it
+cp skills/wbrowser/SKILL.md ~/.claude/skills/wbrowser/SKILL.md
+```
+
+It tells the agent to check `wb status` first, to read a page for real selectors
+instead of guessing them, to show you every field before anything irreversible, and
+that it must never type a password or print a cookie value.
+
+🔵 Setup will not overwrite a `SKILL.md` you have edited — it leaves the new version
+beside it as `SKILL.md.new` and says so.
+
+🔵 For clients other than Claude, point them at the same file, or run the MCP server
+(`npm run mcp`) and let the client discover the tools directly.
 
 ---
 
