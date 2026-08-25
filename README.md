@@ -17,6 +17,12 @@ profile, so this runs a dedicated one and **you sign in there once.** After that
 session persists — one Google sign-in also carried YouTube and two systems that use
 "Sign in with Google" on a real profile we measured. It is one setup, not zero.
 
+![Wbrowser driving a real Chrome tab, with the in-control banner visible](docs/media/demo.gif)
+
+<sub>The agent works in its own tab. The border and the `[agent]` title say who is
+driving, so you can always tell at a glance — recorded in a signed-out profile with
+`scripts/make-demo.sh`.</sub>
+
 And it goes the other way: get halfway through something tedious, then hand that
 exact tab over — `./wb take 2` — and the agent carries on from the page you built.
 

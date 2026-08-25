@@ -7,6 +7,17 @@ has the detail.
 
 ## Unreleased
 
+### Added
+- **A demo GIF in the README**, and `scripts/make-demo.sh` to regenerate it. The tool
+  had no picture of itself working, which is a poor showing for something whose whole
+  claim is that you can *see* the agent driving.
+  - 🔴 The script records in a **throwaway profile on its own port**. Recording in your
+    normal profile puts account names, mail subjects and open tabs into a file you are
+    about to publish — and that profile is signed in by design, so this is not a
+    hypothetical. Your real browser keeps running, untouched.
+  - It refuses to encode if any frame came out nearly empty, since a screenshot of the
+    wrong tab is a small white rectangle that looks fine until opened.
+
 ### Fixed
 - **`wb shot` photographed the wrong tab.** It sent a bare `{"shot":true}` instead of
   going through the command builder, so no agent name was attached — and the engine
