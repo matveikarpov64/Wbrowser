@@ -7,6 +7,13 @@ has the detail.
 
 ## Unreleased
 
+---
+
+## 0.4.2 — 2026-08-25
+
+**A clone now gets everything: the tool, the instructions, and a label that cannot
+silently go missing.**
+
 ### Added
 - **The agent skill ships with the tool** — `skills/wbrowser/SKILL.md`, copied to
   `~/.claude/skills/wbrowser/` by `setup.sh`. Until now the binary landed on your PATH
