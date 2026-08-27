@@ -9,6 +9,44 @@ has the detail.
 
 ---
 
+## 0.6.0 — 2026-08-27
+
+### A test suite, at last
+
+`npm test` and `python3 -m unittest discover -s test -p 'test_*.py'` now run 23
+tests in about a second. Neither needs `npm install`: `node --test` ships with
+Node 18+ and `unittest` ships with Python. CI runs both on Linux, macOS and
+Windows, before the step that installs dependencies — so a broken install cannot
+hide a broken test.
+
+They cover the layer between what you type and what the engine runs (`mkcmd.py`)
+and the helpers that decide where Chrome and its profile live (`launch.js`).
+Those are the parts that fail *quietly*: a wrong path does not crash, it uses the
+wrong directory and reports success.
+
+Each test was checked by breaking the code on purpose and watching it go red.
+Flipping `wb type`'s default to `--fast` turns one test red; truncating the text
+join turns three red. A test that has never failed proves only that it runs.
+
+🔴 **The browser is still not covered.** Selectors, timing, tab ownership and the
+CDP connection are verified by hand on four platforms before a release. An
+end-to-end harness over headless Chrome remains the highest-value contribution —
+see CONTRIBUTING.
+
+### `launch.js` can be imported without launching anything
+
+Requiring it used to start Chrome, because the startup block ran at import time.
+It is now behind `require.main === module`, and the path helpers are exported.
+Running `node launch.js` behaves exactly as before.
+
+### Fixed: `__pycache__` was one allow-rule away from being committed
+
+`.gitignore` is an allow-list, so adding `!/test/` opened everything beneath it —
+including Python bytecode. There were no `*.pyc` rules at all; the deny-everything
+default had been doing that job silently. Both are now explicit.
+
+---
+
 ## 0.5.0 — 2026-08-25
 
 **Types like a person, and tells you what it actually did.**

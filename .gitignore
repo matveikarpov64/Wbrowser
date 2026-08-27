@@ -24,7 +24,14 @@
 !/jobs/
 !/scripts/
 !/skills/
+!/test/
 !/.github/
+
+# 🔴 An allow-listed directory opens *everything* under it, including build
+#    droppings. `__pycache__` reached the very first commit of this repo that
+#    way and nobody spotted it. Deny these again, after the allow rules.
+__pycache__/
+*.py[cod]
 
 # ---- source ----------------------------------------------------------------
 !*.js

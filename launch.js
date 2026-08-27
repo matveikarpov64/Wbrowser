@@ -205,6 +205,17 @@ async function waitForCdp(maxMs = 20000, gaveUp = null) {
 
 // ---------------------------------------------------------------- startup
 
+// 🔵 Exported so the path and platform helpers can be unit-tested without
+//    launching a browser. Everything below the guard still runs as before when
+//    this file is executed directly (`node launch.js`).
+module.exports = {
+  isWSL, chromeCandidates, toWindowsPath, windowsHomeFromWSL, stateDir, profileDir,
+};
+
+// 🔴 Without this guard, `require('./launch.js')` starts Chrome. A test importing
+//    one pure function would launch a real browser on the developer's desktop.
+if (require.main !== module) return;
+
 (async () => {
   // If it is already up, do not start it again. Starting twice makes the second one
   // die silently, leaving only a "started" log and no way to find the cause.

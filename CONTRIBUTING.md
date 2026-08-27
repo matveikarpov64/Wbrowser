@@ -42,18 +42,38 @@ there is no way to ship a hook that installs itself, and that is a good thing.
 
 ## Testing
 
-**There is no automated test suite.** That is the largest gap in this project right now.
+```bash
+npm test                                              # JavaScript
+python3 -m unittest discover -s test -p 'test_*.py'   # Python
+```
 
-CI checks syntax, executable bits, and that the remote MCP server refuses to start
-without a token — but nothing exercises the browser. Everything else was measured by
-hand on four platforms before release, which does not scale and won't catch your
-regression or ours.
+No `npm install` needed for either — `node --test` ships with Node 18+ and
+`unittest` ships with Python. Both run in about a second and touch no browser,
+no network and no disk outside a temp path. CI runs them on Linux, macOS and
+Windows.
 
-🔵 If you want to contribute something high-value, this is it. A harness that launches
-headless Chrome and drives `/act` end-to-end would replace most of what we currently
-do manually.
+**What they cover.** The layer between what you type and what the engine runs
+(`mkcmd.py`), and the helpers that decide where Chrome and its profile live
+(`launch.js`). These are the parts that fail *quietly* — a wrong path does not
+crash, it just uses the wrong directory and reports success.
 
-What exists today:
+**🔴 What they do not cover: the browser.** Nothing here drives a real Chrome, so
+selectors, timing, tab ownership and the CDP connection are still verified by
+hand on four platforms before a release. That does not scale and won't catch
+your regression or ours.
+
+🔵 **If you want to contribute something high-value, this is still it.** A harness
+that launches headless Chrome and drives `/act` end-to-end would replace most of
+what we currently do manually. Start from `scripts/make-demo.sh` — it already
+launches a throwaway profile on its own CDP port without touching your real one.
+
+**When you add a test, make it fail first.** A test that has never failed proves
+nothing about the code; it only proves it runs. Break the function on purpose,
+watch the test go red, then put it back. Both suites above were checked that way:
+flipping `wb type`'s default to `--fast` turns one test red, and truncating the
+text join turns three red.
+
+Also still available, and still worth running by hand:
 
 ```bash
 # syntax

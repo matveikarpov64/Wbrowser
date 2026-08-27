@@ -108,6 +108,18 @@ jobs:
           node cron.js list
           node bin/wbrowser.js --help
 
+      # 🔵 Unit tests. No browser, no network, no npm install — both runners are
+      #    built in (node --test needs Node 18+, unittest ships with Python).
+      #    They cover the layer between what a person types and what the engine
+      #    runs, plus the path helpers that decide where the profile lives.
+      # 🔴 These are not a substitute for the manual four-platform pass. Nothing
+      #    here drives a real Chrome. See CONTRIBUTING for what is still missing.
+      - name: Unit tests (JavaScript)
+        run: node --test
+
+      - name: Unit tests (Python)
+        run: python -m unittest discover -s test -p 'test_*.py' -v
+
       - name: Remote MCP refuses to start without a token
         shell: bash
         run: |

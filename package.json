@@ -1,6 +1,6 @@
 {
   "name": "wbrowser",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "mcpName": "io.github.w-partners/wbrowser",
   "description": "Drive a real Chrome you signed into yourself, from the terminal or any MCP client",
   "type": "commonjs",
@@ -8,6 +8,7 @@
     "wbrowser": "./bin/wbrowser.js"
   },
   "scripts": {
+    "test": "node --test",
     "engine": "node engine.js",
     "mcp": "node mcp-server.js"
   },
