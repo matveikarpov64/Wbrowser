@@ -9,6 +9,63 @@ has the detail.
 
 ---
 
+## 0.7.0 — 2026-08-28
+
+### The browser is under test now: `bash scripts/e2e.sh`
+
+Launches a headless Chrome on its own profile and its own two ports, drives it
+through `/act`, and asserts what came back. 11 checks, about a minute. It never
+touches the browser you are signed into, logs into nothing, and leaves nothing
+behind but a throwaway profile.
+
+It covers what unit tests cannot reach: that `goto` lands, that `read` returns
+the real structure, that **`type` actually puts the whole string in the field**,
+that the tab carries the agent's label, and that `press` reports what it sent.
+
+Each check was verified by breaking the engine on purpose. Disabling the title
+stamp turns exactly one check red; removing the new selector guard turns exactly
+two. A check that has never failed proves only that it runs.
+
+🔴 **Not in CI, deliberately.** It needs a real Chrome and the open internet — a
+site redesign would turn the build red for a reason unrelated to your change, and
+a CI that cries wolf is a CI nobody reads. Run it before a release, or when you
+touch `act()`.
+
+**Still uncovered:** logged-in flows, multi-tab ownership, `take`/`release`,
+account switching. Those stay a manual four-platform pass.
+
+### Fixed: a selector that matches nothing said the page was slow
+
+`click` and `type` both start by scrolling the element into view, so a selector
+matching **zero** elements surfaced as:
+
+```
+locator.scrollIntoViewIfNeeded: Timeout 10000ms exceeded
+```
+
+That reads as a slow page. It sent whoever was debugging to look at load times,
+when the real problem was a typo — or an assumption about the tag. Found while
+building the harness: `input[name=q]` on DuckDuckGo, whose search box is a
+**textarea**. Now:
+
+```
+type: nothing on this page matches "input[name=q]". Run read first — it lists
+the actual selectors, and the element you want may be a different tag than you
+assumed (a search box is often a textarea, not an input).
+```
+
+The check costs a millisecond on the working path and turns a ten-second dead end
+into an answer.
+
+### CONTRIBUTING no longer tells you to drive your own browser
+
+It used to suggest `node launch.js && node engine.js` on the default ports for
+manual checks — which attaches to **your** Chrome on 9222. Fine until a test types
+into a tab you were using. It now points at `scripts/e2e.sh`, which uses ports of
+its own.
+
+---
+
 ## 0.6.0 — 2026-08-27
 
 ### A test suite, at last

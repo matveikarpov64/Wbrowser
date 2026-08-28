@@ -57,15 +57,36 @@ Windows.
 (`launch.js`). These are the parts that fail *quietly* — a wrong path does not
 crash, it just uses the wrong directory and reports success.
 
-**🔴 What they do not cover: the browser.** Nothing here drives a real Chrome, so
-selectors, timing, tab ownership and the CDP connection are still verified by
-hand on four platforms before a release. That does not scale and won't catch
-your regression or ours.
+### The browser: `bash scripts/e2e.sh`
 
-🔵 **If you want to contribute something high-value, this is still it.** A harness
-that launches headless Chrome and drives `/act` end-to-end would replace most of
-what we currently do manually. Start from `scripts/make-demo.sh` — it already
-launches a throwaway profile on its own CDP port without touching your real one.
+Launches a headless Chrome on **its own profile and its own two ports** (9444 and
+7984), drives it through `/act`, and asserts what came back. 11 checks, about a
+minute. It never touches the browser you are signed into, logs into nothing, and
+leaves nothing behind but a throwaway profile directory.
+
+```
+ok   health says the browser is attached
+ok   goto example.com lands
+ok   read returns the heading / links
+ok   the tab is labelled with the agent
+ok   read lists the search field / reports the real tag
+ok   type puts the whole string in
+ok   a bad selector names itself / says nothing matched
+ok   press reports what it sent
+```
+
+🔴 **It is not in CI, on purpose.** It needs a real Chrome and the open internet.
+A site redesign would turn the build red for a reason that has nothing to do with
+your change, and a CI that cries wolf is a CI nobody reads. Run it by hand before
+a release, or when you touch `act()`.
+
+🔴 **It does not kill Chrome.** Chrome may be a window a person is using. The
+engine — which the script started — is stopped by its port, never by name.
+(`pkill -f engine.js` once matched the shell running it and killed that instead.)
+
+**Still not covered:** logged-in flows, multi-tab ownership, `take`/`release`,
+account switching, and every site that needs a session. Those remain a manual pass
+on four platforms. If you want to extend the harness, that is where the value is.
 
 **When you add a test, make it fail first.** A test that has never failed proves
 nothing about the code; it only proves it runs. Break the function on purpose,
@@ -73,20 +94,18 @@ watch the test go red, then put it back. Both suites above were checked that way
 flipping `wb type`'s default to `--fast` turns one test red, and truncating the
 text join turns three red.
 
-Also still available, and still worth running by hand:
+Syntax checks, if you want them without the whole suite:
 
 ```bash
-# syntax
 node --check engine.js launch.js cron.js mcp-server.js journal.js
 python3 -m py_compile *.py
 bash -n wb install.sh sync-session.sh autostart.sh
-
-# behaviour — needs a real Chrome
-node launch.js && node engine.js &
-./wb go https://example.com     # should print the page structure
-./wb status                     # should say which profile it attached to
-node cron.js list               # should list jobs without touching the browser
 ```
+
+🔵 There used to be a "drive it by hand" block here that ran `node launch.js &&
+node engine.js` on the default ports. `scripts/e2e.sh` does the same thing on
+ports of its own — use that instead. The old commands attach to **your** browser
+on 9222, which is fine until a test types into a tab you were using.
 
 **Measure the failure paths too.** A launcher that works is half the story; one that
 explains *why* it didn't work is the other half.

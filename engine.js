@@ -493,6 +493,33 @@ async function showBanner(page, agent) {
   }
 }
 
+// 🔴 Say "nothing matches that selector" instead of letting the first real action
+//    time out. Both click and type start with scrollIntoViewIfNeeded, so a selector
+//    that matches nothing surfaces as `locator.scrollIntoViewIfNeeded: Timeout
+//    10000ms exceeded` — which reads as a slow page, not a typo, and sends whoever
+//    is debugging to look at load times.
+//    Measured 2026-08-28 against a headless run: `input[name=q]` on DuckDuckGo,
+//    whose search box is a *textarea*. `textarea[name=q]` and `[name=q]` both work.
+//    The old message named neither the selector nor the fact that it found nothing.
+// 🔵 Cheap on purpose — count() resolves immediately when there is no match, so this
+//    adds a millisecond to the working path and turns a 10s dead end into an answer.
+async function requireMatch(page, selector, verb) {
+  let n = 0;
+  try {
+    n = await page.locator(selector).count();
+  } catch (e) {
+    // An unparseable selector is its own kind of typo — say so rather than
+    // re-throwing playwright's internal wording.
+    throw new Error(`${verb}: "${selector}" is not a valid selector — ${e.message.split('\n')[0]}`);
+  }
+  if (n === 0) {
+    throw new Error(
+      `${verb}: nothing on this page matches "${selector}". `
+      + 'Run read first — it lists the actual selectors, and the element you want may be '
+      + 'a different tag than you assumed (a search box is often a textarea, not an input).');
+  }
+}
+
 async function act(cmd) {
   const tab = cmd.tab || 'main';
   // If account is given explicitly use it, otherwise look the URL up in the mapping.
@@ -547,6 +574,7 @@ async function act(cmd) {
     //    hit the search box, and typed a character into the middle of a URL — the log
     //    said `click <selector>` either way.
     const el = page.locator(cmd.click).first();
+    await requireMatch(page, cmd.click, 'click');
     // 🔵 Bring it into view first. A person scrolls to what they are clicking; playwright
     //    will too, but only within its own timeout — doing it as a separate step means a
     //    long page does not eat the click budget and fail on something perfectly usable.
@@ -582,6 +610,7 @@ async function act(cmd) {
     //    where keystroke-by-keystroke is slow and nothing is listening. It is opt-in on
     //    purpose: a fast default that quietly drops text is worse than a slow one.
     const { selector, text, fast, delay } = cmd.type;
+    await requireMatch(page, selector, 'type');
     if (fast) {
       await page.fill(selector, text, { timeout: 10000 });
     } else {
